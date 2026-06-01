@@ -1,0 +1,730 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RBKS Compliance Dashboard</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8fafc;color:#1e293b;line-height:1.5}
+.top-bar{position:sticky;top:0;z-index:200;background:#fff;border-bottom:1px solid #e2e8f0;padding:6px 20px;display:flex;align-items:center;justify-content:space-between;font-size:12px;color:#64748b}
+.top-bar .refresh-info{display:flex;align-items:center;gap:12px}
+.top-bar .refresh-btn{padding:4px 12px;background:#2563eb;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px}
+.top-bar .refresh-btn:hover{background:#1d4ed8}
+.tab-bar{position:sticky;top:35px;z-index:100;background:#fff;border-bottom:1px solid #e2e8f0;padding:8px 20px 0;display:flex;gap:0}
+.tab-btn{padding:10px 24px;background:transparent;border:none;color:#64748b;font-size:14px;cursor:pointer;border-bottom:2px solid transparent;margin-bottom:-1px;transition:all .2s;font-weight:500}
+.tab-btn:hover{color:#1e293b}
+.tab-btn.active{color:#2563eb;border-bottom-color:#2563eb}
+#tab1{padding:20px}
+#tab1 .container{max-width:1800px;margin:0 auto}
+#tab1 h1{font-size:1.6rem;color:#1e293b;margin-bottom:5px;font-weight:700}
+#tab1 h2{font-size:1.2rem;color:#475569;margin:30px 0 15px;border-bottom:1px solid #e2e8f0;padding-bottom:8px}
+#tab1 .meta{color:#64748b;font-size:0.85rem;margin-bottom:20px}
+#tab1 .filters{display:flex;flex-wrap:wrap;gap:8px;margin:15px 0 25px}
+#tab1 .filters button{padding:6px 14px;border:1px solid #e2e8f0;border-radius:20px;background:#fff;color:#475569;cursor:pointer;font-size:0.8rem;transition:all .2s}
+#tab1 .filters button:hover,#tab1 .filters button.active{background:#2563eb;border-color:#2563eb;color:#fff}
+#tab1 .stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px;margin:20px 0}
+#tab1 .stat-card{background:#fff;border-radius:10px;padding:15px;text-align:center;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04);transition:box-shadow .2s}
+#tab1 .stat-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08)}
+#tab1 .stat-card .num{font-size:1.8rem;font-weight:700;color:#2563eb}
+#tab1 .stat-card .label{font-size:0.75rem;color:#64748b;margin-top:4px}
+#tab1 table{width:100%;border-collapse:collapse;font-size:0.75rem;margin-bottom:30px}
+#tab1 th{background:#f1f5f9;padding:8px 5px;text-align:left;color:#475569;font-weight:600;position:sticky;top:0}
+#tab1 td{padding:6px 5px;border-bottom:1px solid #f1f5f9;vertical-align:middle}
+#tab1 tr:hover{background:#f8fafc}
+#tab1 .badge{display:inline-block;padding:2px 8px;border-radius:10px;font-size:0.68rem;font-weight:600}
+#tab1 .badge-green{background:#dcfce7;color:#16a34a;border:1px solid #bbf7d0}
+#tab1 .badge-grey{background:#f1f5f9;color:#64748b;border:1px solid #e2e8f0}
+#tab1 .phase-evt{color:#dc2626;font-weight:700}
+#tab1 .phase-dvt{color:#f59e0b;font-weight:700}
+#tab1 .phase-mp{color:#16a34a;font-weight:700}
+#tab1 .evt-cell{background:rgba(220,38,38,0.05)}
+#tab1 .dvt-cell{background:rgba(245,158,11,0.05)}
+#tab1 .section-title{font-size:1.1rem;color:#1e293b;margin:25px 0 10px;display:flex;align-items:center;gap:8px}
+#tab1 .gantt{margin:20px 0 30px;overflow-x:auto;background:#fff;border-radius:10px;padding:15px 20px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)}
+#tab1 .gantt-header{display:grid;grid-template-columns:120px 1fr;margin-bottom:5px}
+#tab1 .gantt-months{display:flex;font-size:0.6rem;color:#64748b;position:relative;height:20px}
+#tab1 .gantt-months span{position:absolute;transform:translateX(-50%)}
+#tab1 .gantt-row{display:grid;grid-template-columns:120px 1fr;align-items:center;height:22px}
+#tab1 .gantt-label{font-size:0.65rem;color:#64748b;text-align:right;padding-right:8px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+#tab1 .gantt-track{height:20px;position:relative;border-left:1px solid #e2e8f0}
+#tab1 .gantt-bar{height:12px;border-radius:3px;position:absolute;top:4px}
+</style>
+</head>
+<body>
+<div class="top-bar">
+<span>🛡️ RBKS Compliance Team Dashboard</span>
+<div class="refresh-info">
+<span id="lastUpdate">Last updated 最後更新: 2026-06-01 | Auto-refresh 自動更新: ON</span>
+<button class="refresh-btn" onclick="location.reload()">🔄 Refresh 重新整理</button>
+</div>
+</div>
+<div class="tab-bar">
+<button class="tab-btn active" onclick="switchTab(1)">📅 專案排程 Project Schedule</button>
+<button class="tab-btn" onclick="switchTab(2)">👥 人員負載 Personnel Loading</button>
+<button class="tab-btn" onclick="switchTab(3)">📖 SOP 操作手冊</button>
+</div>
+<div id="tab1">
+<div class="container">
+<h1>🛡️ RBKS Compliance Dashboard — NPI 專案總覽</h1>
+<p class="meta">資料來源 Source: Ring Confluence (RCC Space) | ⚠️ EVT & DVT 為 Compliance 高峰期 Peak Testing Period<br>Generated: 2026-06-01 | Total NPI Projects 專案總數: 51</p>
+<div class="stats">
+<div class="stat-card"><div class="num">51</div><div class="label">NPI 專案總數 Total</div></div>
+<div class="stat-card"><div class="num" style="color:#dc2626">35</div><div class="label">有確切時程 Confirmed</div></div>
+<div class="stat-card"><div class="num" style="color:#64748b">16</div><div class="label">估計/待確認 Estimated</div></div>
+<div class="stat-card"><div class="num" style="color:#f59e0b">11</div><div class="label">EVT 進行中 Active</div></div>
+<div class="stat-card"><div class="num" style="color:#16a34a">3</div><div class="label">DVT 進行中 Active</div></div>
+<div class="stat-card"><div class="num" style="color:#2563eb">6</div><div class="label">Prep for Testing 準備中</div></div>
+</div>
+<div class="filters">
+<button class="active" onclick="filterProjects('all',event)">全部 All</button>
+<button onclick="filterProjects('evt',event)">🔥 EVT</button>
+<button onclick="filterProjects('dvt',event)">🔥 DVT</button>
+<button onclick="filterProjects('mp',event)">✅ MP</button>
+<button onclick="filterProjects('prep',event)">📋 Prep</button>
+<button onclick="filterProjects('scoping',event)">🔮 Scoping</button>
+</div>
+<div id="monthRangePanel" style="background:#fff;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#2563eb;margin-bottom:12px;font-size:1rem">📆 月份區間分析 Month Range Analysis</h3>
+<div style="display:flex;flex-wrap:wrap;align-items:center;gap:12px;margin-bottom:12px">
+<div style="display:flex;align-items:center;gap:6px">
+<label style="font-size:0.8rem;color:#475569;font-weight:500">起始月 From:</label>
+<select id="monthFrom" onchange="calcMonthRange()" style="padding:5px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.8rem;color:#1e293b;background:#f8fafc;cursor:pointer">
+</select>
+</div>
+<div style="display:flex;align-items:center;gap:6px">
+<label style="font-size:0.8rem;color:#475569;font-weight:500">結束月 To:</label>
+<select id="monthTo" onchange="calcMonthRange()" style="padding:5px 10px;border:1px solid #e2e8f0;border-radius:6px;font-size:0.8rem;color:#1e293b;background:#f8fafc;cursor:pointer">
+</select>
+</div>
+<button onclick="calcMonthRange()" style="padding:5px 14px;background:#2563eb;color:#fff;border:none;border-radius:6px;font-size:0.78rem;cursor:pointer">計算 Calculate</button>
+</div>
+<div id="monthRangeResult" style="display:none;display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:10px">
+<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;text-align:center">
+<div id="mrEvtCount" style="font-size:1.6rem;font-weight:700;color:#dc2626">0</div>
+<div style="font-size:0.75rem;color:#475569;margin-top:2px">🔥 EVT 案件數</div>
+<div id="mrEvtList" style="font-size:0.7rem;color:#64748b;margin-top:6px;text-align:left;max-height:80px;overflow-y:auto"></div>
+</div>
+<div style="background:#fffbeb;border:1px solid #fed7aa;border-radius:8px;padding:12px;text-align:center">
+<div id="mrDvtCount" style="font-size:1.6rem;font-weight:700;color:#f59e0b">0</div>
+<div style="font-size:0.75rem;color:#475569;margin-top:2px">🔥 DVT 案件數</div>
+<div id="mrDvtList" style="font-size:0.7rem;color:#64748b;margin-top:6px;text-align:left;max-height:80px;overflow-y:auto"></div>
+</div>
+<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px;text-align:center">
+<div id="mrTotalCount" style="font-size:1.6rem;font-weight:700;color:#2563eb">0</div>
+<div style="font-size:0.75rem;color:#475569;margin-top:2px">📊 合計 Total (EVT+DVT)</div>
+</div>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#dc2626;margin-bottom:10px">🔥 高峰期分析 Peak Analysis</h3>
+<p style="font-size:0.85rem;color:#475569;margin-bottom:10px">EVT 和 DVT 階段為 Compliance 測試高峰期，需要密切關注資源分配：</p>
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(250px,1fr));gap:12px">
+<div style="background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px">
+<strong style="color:#dc2626">🔥 EVT 高峰 (11 projects)</strong><br>
+<span style="font-size:0.8rem;color:#475569">Mela, Coralfish, Kharan, White Rock, Jewelfish, Hexa, Mount Wilson, Vireo, Blenny, Tabernas, Cristo</span>
+</div>
+<div style="background:#fffbeb;border:1px solid #fed7aa;border-radius:8px;padding:12px">
+<strong style="color:#f59e0b">🔥 DVT 高峰 (3 projects)</strong><br>
+<span style="font-size:0.8rem;color:#475569">Monte, Huron, Petunia</span>
+</div>
+<div style="background:#f0fdf4;border:1px solid #bbf7d0;border-radius:8px;padding:12px">
+<strong style="color:#16a34a">✅ MP 完成/進行中 (4 projects)</strong><br>
+<span style="font-size:0.8rem;color:#475569">Zorilla, Forsythia, Valkyrie, Moonlight_r24</span>
+</div>
+<div style="background:#eff6ff;border:1px solid #bfdbfe;border-radius:8px;padding:12px">
+<strong style="color:#2563eb">📋 Prep for Testing (6 projects)</strong><br>
+<span style="font-size:0.8rem;color:#475569">Pencilfish, Dunlin, Snapper, Opaleye, Moray, Tanami</span>
+</div>
+</div>
+</div>
+<h2>📅 甘特圖 Gantt Chart — 全專案時程 (Nov 2025 – Jun 2027)</h2>
+<div style="display:flex;gap:20px;margin:10px 0;font-size:0.75rem;align-items:center;color:#475569">
+<div style="display:flex;align-items:center;gap:5px"><div style="width:16px;height:10px;border-radius:2px;background:rgba(220,38,38,0.75)"></div>EVT</div>
+<div style="display:flex;align-items:center;gap:5px"><div style="width:16px;height:10px;border-radius:2px;background:rgba(245,158,11,0.75)"></div>DVT</div>
+<div style="display:flex;align-items:center;gap:5px"><div style="width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div>MP</div>
+<div style="display:flex;align-items:center;gap:5px"><div style="width:16px;height:10px;border-radius:2px;border:1px dashed #94a3b8;background:rgba(148,163,184,0.15)"></div>估計時程 Estimated</div>
+</div>
+<div class="gantt">
+<div class="gantt-header"><div></div>
+<div class="gantt-months">
+<span style="left:0%">Nov'25</span><span style="left:4.9%">Dec</span><span style="left:10%">Jan'26</span><span style="left:15.1%">Feb</span><span style="left:19.7%">Mar</span><span style="left:24.8%">Apr</span><span style="left:29.8%">May</span><span style="left:34.9%">Jun</span><span style="left:39.8%">Jul</span><span style="left:44.9%">Aug</span><span style="left:50%">Sep</span><span style="left:54.9%">Oct</span><span style="left:60%">Nov</span><span style="left:64.9%">Dec</span><span style="left:70.1%">Jan'27</span><span style="left:75%">Feb</span><span style="left:80%">Mar</span><span style="left:85%">Apr</span><span style="left:90%">May</span><span style="left:95%">Jun</span>
+</div></div>
+<div style="border-top:1px solid #e2e8f0;margin-top:5px;padding-top:3px"><div style="font-size:0.6rem;color:#16a34a;padding-left:5px;margin-bottom:2px">✅ MP</div></div>
+<div class="gantt-row"><div class="gantt-label">Cinco</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:5.6%;width:2.8%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:5.6%;width:2.8%"></div><div style="position:absolute;top:3px;left:14.9%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Flan</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:4.8%;width:8.7%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:15.9%;width:4.8%"></div><div style="position:absolute;top:3px;left:22.8%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Freesia</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:8.7%;width:3.6%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:15.6%;width:4.9%"></div><div style="position:absolute;top:3px;left:22.9%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Lionfish</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:6.3%;width:10.8%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:19.7%;width:4.8%"></div><div style="position:absolute;top:3px;left:25.0%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Chromis</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:6.3%;width:10.5%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:19.7%;width:4.8%"></div><div style="position:absolute;top:3px;left:25.0%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Osprey</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:5.3%;width:11.5%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:18.8%;width:5.7%"></div><div style="position:absolute;top:3px;left:25.0%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Orchid</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:6.4%;width:8.4%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:15.3%;width:7.0%"></div><div style="position:absolute;top:3px;left:24.8%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Scorpius</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:13.0%;width:6.2%"></div><div style="position:absolute;top:3px;left:21.1%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Moonlight_r24</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:10.7%;width:0.7%"></div><div style="position:absolute;top:3px;left:11.3%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Valkyrie</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:35%;width:5%"></div><div style="position:absolute;top:3px;left:64.9%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Zorilla</div><div class="gantt-track"><div style="position:absolute;top:3px;left:20%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Forsythia</div><div class="gantt-track"><div style="position:absolute;top:3px;left:18%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div style="border-top:1px solid #e2e8f0;margin-top:5px;padding-top:3px"><div style="font-size:0.6rem;color:#f59e0b;padding-left:5px;margin-bottom:2px">🔥 DVT</div></div>
+<div class="gantt-row"><div class="gantt-label">Sombrus</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:15.3%;width:7.7%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Phantom_r24</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:10.7%;width:0.7%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Prismal</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:8.5%;width:6.5%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Monte</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:25%;width:8%"></div><div style="position:absolute;top:3px;left:30.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Huron</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:8.5%;width:0.5%"></div><div style="position:absolute;top:3px;left:30.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Petunia</div><div class="gantt-track"><div style="position:absolute;top:3px;left:30%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div style="border-top:1px solid #e2e8f0;margin-top:5px;padding-top:3px"><div style="font-size:0.6rem;color:#dc2626;padding-left:5px;margin-bottom:2px">🔥 EVT</div></div>
+<div class="gantt-row"><div class="gantt-label">PoE++</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:6.1%;width:4.8%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Newport</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:19.7%;width:8%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:29%;width:2%"></div><div style="position:absolute;top:3px;left:31%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Mela</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:39%;width:6%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Coralfish</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:30%;width:5%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Kharan</div><div class="gantt-track"><div style="position:absolute;top:3px;left:40%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">White Rock</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:25%;width:6%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:31.5%;width:1.5%"></div><div style="position:absolute;top:3px;left:32.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Jewelfish</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:29%;width:4%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Hexa</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:10%;width:10%"></div><div style="position:absolute;top:3px;left:20.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Mount Wilson</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:15.5%;width:10%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:25%;width:4.5%"></div><div style="position:absolute;top:3px;left:30.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Vireo</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:29%;width:4%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Blenny</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:24%;width:15%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:43%;width:5.5%"></div><div style="position:absolute;top:3px;left:53.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Tabernas</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:29.8%;width:10%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Cristo</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:25%;width:8%"></div></div></div>
+<div style="border-top:1px solid #e2e8f0;margin-top:5px;padding-top:3px"><div style="font-size:0.6rem;color:#2563eb;padding-left:5px;margin-bottom:2px">📋 Prep for Testing</div></div>
+<div class="gantt-row"><div class="gantt-label">Pencilfish</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:35%;width:7%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Dunlin</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:25%;width:10%"></div><div style="position:absolute;top:3px;left:55%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Snapper</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:35%;width:6%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:50%;width:3%"></div><div style="position:absolute;top:3px;left:53%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Opaleye</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:35%;width:6%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:50%;width:3%"></div><div style="position:absolute;top:3px;left:53%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Moray</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:35%;width:6%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:50%;width:3%"></div><div style="position:absolute;top:3px;left:53%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Tanami</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:24%;width:8%"></div><div style="position:absolute;top:3px;left:25.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div style="border-top:1px solid #e2e8f0;margin-top:5px;padding-top:3px"><div style="font-size:0.6rem;color:#64748b;padding-left:5px;margin-bottom:2px">🔮 Scoping</div></div>
+<div class="gantt-row"><div class="gantt-label">Unicorn</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:55%;width:25%"></div><div style="position:absolute;top:3px;left:85%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Altus</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Black Rock</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(220,38,38,0.75);left:32%;width:8%"></div><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:50%;width:4.5%"></div><div style="position:absolute;top:3px;left:54%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Pansy</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:45%;width:15%"></div><div style="position:absolute;top:3px;left:60%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Poppy</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:45%;width:15%"></div><div style="position:absolute;top:3px;left:60%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Hawkfish</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:20%;width:12%"></div><div style="position:absolute;top:3px;left:30.5%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Banjar</div><div class="gantt-track"><div class="gantt-bar" style="background:rgba(245,158,11,0.75);left:47%;width:5.7%"></div><div style="position:absolute;top:3px;left:53%;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);border-radius:2px"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Corvus</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Sablefish</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Bristlecone</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Nocturne</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Fossa</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Steelhead</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+<div class="gantt-row"><div class="gantt-label">Snook</div><div class="gantt-track"><div class="gantt-bar" style="border:1px dashed #94a3b8;background:rgba(148,163,184,0.15);left:50%;width:15%"></div></div></div>
+</div><!-- end gantt -->
+<h2 class="section-title">✅ 進行中專案 MP階段 Mass Production</h2>
+<table class="project-table"><thead><tr><th>Code Name</th><th>Product</th><th class="evt-cell">EVT</th><th class="dvt-cell">DVT</th><th>OK2MP</th><th>Ship</th><th>Announce</th><th>Street</th><th>Phase</th><th>Status</th></tr></thead><tbody>
+<tr data-status="green" data-phase="MP"><td><strong>Cinco</strong></td><td>Wired Doorbell Elite (2nd Gen)</td><td class="evt-cell">12/05–12/22/25</td><td class="dvt-cell">12/05–12/22/25</td><td>2026-01-30</td><td>2026-02-06</td><td>2025-12-22</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Flan</strong></td><td>Chime Enhanced</td><td class="evt-cell">11/30/25–01/22/26</td><td class="dvt-cell">02/05–03/06/26</td><td>2026-03-19</td><td>2026-03-31</td><td>TBD</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Freesia</strong></td><td>Video Doorbell (Wired)</td><td class="evt-cell">12/24/25–01/15/26</td><td class="dvt-cell">02/04–03/06/26</td><td>2026-03-20</td><td>2026-04-24</td><td>2026-04-16</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Lionfish</strong></td><td>Spotlight Cam Plus (2nd Gen)</td><td class="evt-cell">12/09/25–02/13/26</td><td class="dvt-cell">03/02–03/30/26</td><td>2026-04-02</td><td>2026-04-22</td><td>TBD</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Chromis</strong></td><td>Outdoor Cam Plus (2nd Gen)</td><td class="evt-cell">12/09/25–02/11/26</td><td class="dvt-cell">03/02–03/30/26</td><td>2026-04-02</td><td>2026-04-22</td><td>TBD</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Osprey</strong></td><td>Floodlight Cam Plus</td><td class="evt-cell">12/03/25–02/11/26</td><td class="dvt-cell">02/26–04/02/26</td><td>2026-04-02</td><td>2026-04-22</td><td>TBD</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Orchid</strong></td><td>Video Doorbell (3rd Gen)</td><td class="evt-cell">10/20/25–01/22/26</td><td class="dvt-cell">03/06–04/02/26</td><td>2026-03-20</td><td>2026-04-02</td><td>2026-04-22</td><td>2026-05-13</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Scorpius</strong></td><td>Solar Charger for Sunray</td><td class="evt-cell">N/A</td><td class="dvt-cell">01/19–02/26/26</td><td>2026-03-09</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Moonlight_r24</strong></td><td>Moonlight Refresh</td><td class="evt-cell">N/A</td><td class="dvt-cell">01/05–01/09/26</td><td>2026-01-09</td><td>2026-01-14</td><td>2026-03-04</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Valkyrie</strong></td><td>Autonomous Indoor Security Drone</td><td class="evt-cell">06/23–07/24/26</td><td class="dvt-cell">TBD</td><td>2026-12-15</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Zorilla</strong></td><td>Car Alarm</td><td class="evt-cell">TBD</td><td class="dvt-cell">~Mar 2026</td><td>Shipped</td><td>Shipped</td><td>TBD</td><td>2026-03-04</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="MP"><td><strong>Forsythia</strong></td><td>Blink Chime</td><td class="evt-cell">~01/2026</td><td class="dvt-cell">01/29–02/25/26</td><td>2026-02-13</td><td>Shipped</td><td>TBD</td><td>TBD</td><td class="phase-mp">MP</td><td><span class="badge badge-green">GREEN</span></td></tr>
+</tbody></table>
+<h2 class="section-title">🔥 DVT階段 Design Validation</h2>
+<table class="project-table"><thead><tr><th>Code Name</th><th>Product</th><th class="evt-cell">EVT</th><th class="dvt-cell">DVT</th><th>OK2MP</th><th>Ship</th><th>Announce</th><th>Street</th><th>Phase</th><th>Status</th></tr></thead><tbody>
+<tr data-status="green" data-phase="DVT"><td><strong>Sombrus</strong></td><td>4W Solar Panel for Doorbells</td><td class="evt-cell">N/A</td><td class="dvt-cell">02/02–03/20/26</td><td>TBD</td><td>TBD</td><td>2026-04-15</td><td>TBD</td><td class="phase-dvt">DVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="DVT"><td><strong>Phantom_r24</strong></td><td>Phantom Refresh</td><td class="evt-cell">N/A</td><td class="dvt-cell">01/05–01/09/26</td><td>Shipped</td><td>2025-09-22</td><td>2026-01-16</td><td>TBD</td><td class="phase-dvt">DVT</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="DVT"><td><strong>Prismal</strong></td><td>TBD</td><td class="evt-cell">N/A</td><td class="dvt-cell">12/22/25–01/30/26</td><td>TBD</td><td>TBD</td><td>N/A</td><td>TBD</td><td class="phase-dvt">DVT</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="DVT"><td><strong>Monte</strong></td><td>Sync Module XR+</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>2026-05-20</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-dvt">DVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="DVT"><td><strong>Huron</strong></td><td>Wired Floodlight</td><td class="evt-cell">12/23–12/24/25</td><td class="dvt-cell">~03/2026</td><td>2026-05-27</td><td>TBD</td><td>TBD</td><td>2026-07-22</td><td class="phase-dvt">DVT2 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="DVT"><td><strong>Petunia</strong></td><td>Blink Plug-in Adapter</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>2026-05-06</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-dvt">DVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+</tbody></table>
+<h2 class="section-title">🔥 EVT階段 Engineering Validation</h2>
+<table class="project-table"><thead><tr><th>Code Name</th><th>Product</th><th class="evt-cell">EVT</th><th class="dvt-cell">DVT</th><th>OK2MP</th><th>Ship</th><th>Announce</th><th>Street</th><th>Phase</th><th>Status</th></tr></thead><tbody>
+<tr data-status="green" data-phase="EVT"><td><strong>PoE++</strong></td><td>PoE++ Adapter</td><td class="evt-cell">12/08/25–01/06/26</td><td class="dvt-cell">N/A</td><td>TBD</td><td>TBD</td><td>N/A</td><td>TBD</td><td class="phase-evt">EVT</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Newport</strong></td><td>2K Doorbell</td><td class="evt-cell">~03–05/2026</td><td class="dvt-cell">05/06–05/13/26</td><td>~2026-05-20</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Mela</strong></td><td>TBC</td><td class="evt-cell">~07/2026</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Coralfish</strong></td><td>Dome Cam</td><td class="evt-cell">TBD</td><td class="dvt-cell">~05/08/26</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Kharan</strong></td><td>Blink Frontier</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>2026-07-09</td><td>TBD</td><td>TBD</td><td>2026-08-05</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>White Rock</strong></td><td>Ring Bridge</td><td class="evt-cell">04/07–05/12/26</td><td class="dvt-cell">05/19–05/25/26</td><td>2026-05-25</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT mini 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Jewelfish</strong></td><td>Indoor Cam 4K</td><td class="evt-cell">TBD</td><td class="dvt-cell">~05/2026</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Hexa</strong></td><td>Ring Elite 140/180/270/360</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>2026-03-16</td><td>TBD</td><td>TBD</td><td>2026-07-08</td><td class="phase-evt">EVT 1.2 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Mount Wilson</strong></td><td>Security Hub</td><td class="evt-cell">02/03–04/14/26</td><td class="dvt-cell">04/14–05/11/26</td><td>2026-05-11</td><td>TBD</td><td>TBD</td><td>2026-06-01</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="EVT"><td><strong>Vireo</strong></td><td>Blink Mini 4K+</td><td class="evt-cell">TBD</td><td class="dvt-cell">~05/2026</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="grey" data-phase="EVT"><td><strong>Blenny</strong></td><td>Outdoor Cam 2K Long-Range</td><td class="evt-cell">03/27–06/30/26</td><td class="dvt-cell">07/21–08/24/26</td><td>2026-09-23</td><td>TBD</td><td>TBD</td><td>2026-10-09</td><td class="phase-evt">EVT Mini 🔥</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="EVT"><td><strong>Tabernas</strong></td><td>Blink Outdoor 2K XR+</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="EVT"><td><strong>Cristo</strong></td><td>Ring Long-Range Hub</td><td class="evt-cell">~04/28/2026</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td class="phase-evt">EVT 🔥</td><td><span class="badge badge-grey">GREY</span></td></tr>
+</tbody></table>
+<h2 class="section-title">📋 Prep for Testing 準備測試中</h2>
+<table class="project-table"><thead><tr><th>Code Name</th><th>Product</th><th class="evt-cell">EVT</th><th class="dvt-cell">DVT</th><th>OK2MP</th><th>Ship</th><th>Announce</th><th>Street</th><th>Phase</th><th>Status</th></tr></thead><tbody>
+<tr data-status="green" data-phase="Prep"><td><strong>Pencilfish</strong></td><td>Ring 2K Indoor Cam Pan Tilt</td><td class="evt-cell">~06–07/2026</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Prep</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Prep"><td><strong>Dunlin</strong></td><td>Blink Indoor/Outdoor PTZ</td><td class="evt-cell">~04/07–06/09/26</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>2026-10-07</td><td>Prep</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Prep"><td><strong>Snapper</strong></td><td>4K Wired Floodlight Camera</td><td class="evt-cell">~06/26</td><td class="dvt-cell">~09/15</td><td>2026-09-18</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Prep</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Prep"><td><strong>Opaleye</strong></td><td>4K Dual-Powered Spotlight Camera</td><td class="evt-cell">~06/26</td><td class="dvt-cell">~09/15</td><td>2026-09-18</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Prep</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Prep"><td><strong>Moray</strong></td><td>4K Dual-Powered Stick-up Camera</td><td class="evt-cell">~06/26</td><td class="dvt-cell">~09/15</td><td>2026-09-18</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Prep</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Prep"><td><strong>Tanami</strong></td><td>4K Dual-Powered Stick-up Camera</td><td class="evt-cell">~05/15/26</td><td class="dvt-cell">~08/14/26</td><td>2026-10-12</td><td>TBD</td><td>TBD</td><td>2026-11-18</td><td>Prep</td><td><span class="badge badge-green">GREEN</span></td></tr>
+</tbody></table>
+<h2 class="section-title">🔮 規劃中 Scoping</h2>
+<table class="project-table"><thead><tr><th>Code Name</th><th>Product</th><th class="evt-cell">EVT</th><th class="dvt-cell">DVT</th><th>OK2MP</th><th>Ship</th><th>Announce</th><th>Street</th><th>Phase</th><th>Status</th></tr></thead><tbody>
+<tr data-status="green" data-phase="Scoping"><td><strong>Unicorn</strong></td><td>Dual Power Spotlight Pan-Tilt Cam</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Q2 2027</td><td>Scoping</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Scoping"><td><strong>Altus</strong></td><td>Mobile Security Camera</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>2026-10-13</td><td>Scoping</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Scoping"><td><strong>Black Rock</strong></td><td>Sync Module Core</td><td class="evt-cell">05/26–07/01/26</td><td class="dvt-cell">09/02–09/29/26</td><td>2026-09-29</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Scoping"><td><strong>Pansy</strong></td><td>Blink 4K Wired Doorbell</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>2026-11-25</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="green" data-phase="Scoping"><td><strong>Poppy</strong></td><td>Blink 4K Battery Doorbell</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>2026-11-25</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-green">GREEN</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Hawkfish</strong></td><td>Wide Angle Indoor Cam</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>2026-05-13</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Banjar</strong></td><td>Integrated Blink SLC</td><td class="evt-cell">~Jul 2026</td><td class="dvt-cell">08/14/26</td><td>2026-09-18</td><td>TBD</td><td>2026-09-29</td><td>2026-10-28</td><td>NPI Prep</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Corvus</strong></td><td>Smart Lock</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Sablefish</strong></td><td>Blink 2W Solar Panel</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Bristlecone</strong></td><td>Keypad</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Nocturne</strong></td><td>Ring Indoor Illuminated Sign</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Fossa</strong></td><td>Floodlight Cam Plug-in Kit</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Steelhead</strong></td><td>6W USB-C Solar Panel</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+<tr data-status="grey" data-phase="Scoping"><td><strong>Snook</strong></td><td>Blink Battery Pack</td><td class="evt-cell">TBD</td><td class="dvt-cell">TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>TBD</td><td>Scoping</td><td><span class="badge badge-grey">GREY</span></td></tr>
+</tbody></table>
+<div style="margin-top:30px;padding:15px;background:#fff;border-radius:8px;font-size:0.8rem;color:#64748b;text-align:center;border:1px solid #e2e8f0">
+📊 RBKS Compliance Team Dashboard | Generated: 2026-06-01 | 資料來源: Ring Confluence (RCC Space)<br>
+⚠️ EVT & DVT 為 Compliance 高峰期 — 請注意資源分配與測試排程
+</div>
+</div><!-- end container -->
+</div><!-- end tab1 -->
+<div id="tab2" style="display:none;height:calc(100vh - 70px)">
+<div class="t2-wrap">
+<div class="t2-sidebar">
+<h2>📋 人員篩選 Personnel Filter</h2>
+<div id="t2filters"></div>
+<button class="t2-btn-clear" onclick="t2clearAll()">清除所有篩選 Clear All</button>
+</div>
+<div class="t2-main">
+<div class="t2-topbar">
+<h1>人員負載總覽 Personnel Loading</h1>
+<div id="t2loadingSummary"></div>
+<div id="t2PhaseCounts" style="display:flex;gap:8px;align-items:center"></div>
+<div class="t2-legend">
+<span><div class="t2-dot" style="background:#dc2626"></div>EVT</span>
+<span><div class="t2-dot" style="background:#f59e0b"></div>DVT</span>
+<span><div class="t2-dot" style="background:#16a34a"></div>OK2MP</span>
+</div>
+</div>
+<div class="t2-content">
+<div class="t2-section-title">甘特圖 Timeline (Nov 2025 – Jun 2027)</div>
+<div class="t2-gantt-container"><table class="t2-gantt-table"><thead id="t2ganttHead"></thead><tbody id="t2ganttBody"></tbody></table></div>
+<div class="t2-section-title">專案列表 Project Table</div>
+<table class="t2-data-table"><thead id="t2tableHead"></thead><tbody id="t2tableBody"></tbody></table>
+</div>
+</div>
+</div>
+</div>
+<div id="tab3" style="display:none;padding:20px">
+<div style="max-width:1200px;margin:0 auto">
+<h1 style="font-size:1.6rem;color:#1e293b;margin-bottom:5px">📖 SOP 操作手冊 Standard Operating Procedure</h1>
+<p style="color:#64748b;font-size:0.85rem;margin-bottom:20px">RBKS Compliance Dashboard — 使用說明與自動更新流程</p>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:16px;margin-bottom:30px">
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#2563eb;margin-bottom:12px;font-size:1rem">🌐 Dashboard 存取方式 Access</h3>
+<table style="width:100%;font-size:0.8rem;border-collapse:collapse">
+<tr><td style="padding:6px 0;color:#64748b;width:100px">本機存取</td><td style="padding:6px 0"><code style="background:#f1f5f9;padding:2px 6px;border-radius:3px">http://localhost:8080/dashboard.html</code></td></tr>
+<tr><td style="padding:6px 0;color:#64748b">區網存取</td><td style="padding:6px 0"><code style="background:#f1f5f9;padding:2px 6px;border-radius:3px">http://[your-ip]:8080/dashboard.html</code></td></tr>
+<tr><td style="padding:6px 0;color:#64748b">狀態 API</td><td style="padding:6px 0"><code style="background:#f1f5f9;padding:2px 6px;border-radius:3px">http://localhost:8080/api/status</code></td></tr>
+</table>
+</div>
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#2563eb;margin-bottom:12px;font-size:1rem">⚡ 快速啟動 Quick Start</h3>
+<div style="font-size:0.8rem;color:#475569;line-height:1.8">
+<div style="margin-bottom:8px"><strong>1. 安裝依賴 Install:</strong><br><code style="background:#f1f5f9;padding:2px 6px;border-radius:3px;font-size:0.75rem">pip3 install playwright pycookiecheat requests openpyxl</code></div>
+<div style="margin-bottom:8px"><strong>2. 啟動監控 Start Monitor:</strong><br><code style="background:#f1f5f9;padding:2px 6px;border-radius:3px;font-size:0.75rem">python3 monitor_daemon.py</code></div>
+<div><strong>3. 設定開機自動啟動 Auto-start:</strong><br><code style="background:#f1f5f9;padding:2px 6px;border-radius:3px;font-size:0.75rem">bash setup_autostart.sh</code></div>
+</div>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#1e293b;margin-bottom:12px;font-size:1rem">🔄 自動更新流程 Auto-Update Workflow</h3>
+<div style="display:flex;flex-wrap:wrap;gap:12px;margin-bottom:16px">
+<div style="flex:1;min-width:200px;background:#eff6ff;border-radius:8px;padding:12px;border:1px solid #bfdbfe">
+<div style="font-weight:600;color:#2563eb;margin-bottom:6px;font-size:0.85rem">① 偵測 Detect</div>
+<div style="font-size:0.75rem;color:#475569">每 15 分鐘自動檢查<br>• Ring Confluence NPI Overview<br>• SharePoint Excel 人員異動</div>
+</div>
+<div style="flex:1;min-width:200px;background:#f0fdf4;border-radius:8px;padding:12px;border:1px solid #bbf7d0">
+<div style="font-weight:600;color:#16a34a;margin-bottom:6px;font-size:0.85rem">② 搜尋 Search</div>
+<div style="font-size:0.75rem;color:#475569">新案件自動搜尋排程<br>• HW Schedule / Milestone<br>• Program Status / PRD<br>• Weekly Update pages</div>
+</div>
+<div style="flex:1;min-width:200px;background:#fffbeb;border-radius:8px;padding:12px;border:1px solid #fed7aa">
+<div style="font-weight:600;color:#f59e0b;margin-bottom:6px;font-size:0.85rem">③ 更新 Update</div>
+<div style="font-size:0.75rem;color:#475569">自動重建 Dashboard<br>• 更新甘特圖<br>• 更新專案表格<br>• 更新人員負載</div>
+</div>
+<div style="flex:1;min-width:200px;background:#fef2f2;border-radius:8px;padding:12px;border:1px solid #fecaca">
+<div style="font-weight:600;color:#dc2626;margin-bottom:6px;font-size:0.85rem">④ 通知 Notify</div>
+<div style="font-size:0.75rem;color:#475569">記錄更新歷史<br>• monitor.log 日誌<br>• /api/status 狀態<br>• Dashboard 時間戳</div>
+</div>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#1e293b;margin-bottom:12px;font-size:1rem">📊 資料來源 Data Sources</h3>
+<table style="width:100%;font-size:0.8rem;border-collapse:collapse">
+<thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">來源 Source</th><th style="padding:8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">內容 Content</th><th style="padding:8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">認證 Auth</th></tr></thead>
+<tbody>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong>Ring Confluence (RCC)</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">NPI 專案列表、排程、里程碑</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">Okta SSO (Firefox cookies)</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong>SharePoint Excel</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">人員分配 (PM/RF/EMC/Energy/Safety/GMA/CM)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">Microsoft + Midway (Firefox cookies)</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong>LabCollab Confluence</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">部分案件排程 (如 Mela)</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">LabCollab auth</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(350px,1fr));gap:16px;margin-bottom:16px">
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#1e293b;margin-bottom:12px;font-size:1rem">🛠️ 常用指令 Commands</h3>
+<table style="width:100%;font-size:0.78rem;border-collapse:collapse">
+<tr><td style="padding:5px 0;color:#64748b;width:50%">啟動監控+伺服器</td><td style="padding:5px 0"><code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">python3 monitor_daemon.py</code></td></tr>
+<tr><td style="padding:5px 0;color:#64748b">單次檢查</td><td style="padding:5px 0"><code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">python3 monitor_daemon.py --check</code></td></tr>
+<tr><td style="padding:5px 0;color:#64748b">強制重建</td><td style="padding:5px 0"><code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">python3 monitor_daemon.py --rebuild</code></td></tr>
+<tr><td style="padding:5px 0;color:#64748b">自訂 Port</td><td style="padding:5px 0"><code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">python3 monitor_daemon.py --port 9090</code></td></tr>
+<tr><td style="padding:5px 0;color:#64748b">查看日誌</td><td style="padding:5px 0"><code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">tail -f monitor.log</code></td></tr>
+<tr><td style="padding:5px 0;color:#64748b">停止自動啟動</td><td style="padding:5px 0"><code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">launchctl unload ~/Library/LaunchAgents/com.rbks.compliance-monitor.plist</code></td></tr>
+</table>
+</div>
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#1e293b;margin-bottom:12px;font-size:1rem">⚠️ 疑難排解 Troubleshooting</h3>
+<div style="font-size:0.78rem;color:#475569;line-height:1.8">
+<div style="margin-bottom:8px"><strong>Q: 認證過期 Auth expired?</strong><br>A: 在 Firefox 重新登入 Ring Confluence 和 SharePoint，cookies 會自動更新</div>
+<div style="margin-bottom:8px"><strong>Q: 新案件沒有排程?</strong><br>A: 系統會在下次檢查時重試。若案件排程僅在 Smartsheet，需手動更新</div>
+<div><strong>Q: Dashboard 無法存取?</strong><br>A: 確認 monitor_daemon.py 正在執行，或執行 <code style="background:#f1f5f9;padding:1px 4px;border-radius:3px">python3 monitor_daemon.py</code></div>
+</div>
+</div>
+</div>
+
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;margin-bottom:16px;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#1e293b;margin-bottom:12px;font-size:1rem">📐 Dashboard 欄位說明 Column Definitions</h3>
+<table style="width:100%;font-size:0.8rem;border-collapse:collapse">
+<thead><tr style="background:#f8fafc"><th style="padding:8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">欄位 Column</th><th style="padding:8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">說明 Description</th><th style="padding:8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">備註 Notes</th></tr></thead>
+<tbody>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong style="color:#dc2626">EVT</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">Engineering Validation Test 工程驗證</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">🔥 Compliance 高峰期 (Pre-beta)</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong style="color:#f59e0b">DVT</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">Design Validation Test 設計驗證</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">🔥 Compliance 高峰期 (Beta)</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong>OK2MP</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">OK to Mass Production 量產許可</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">所有認證須在此前完成</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong>Ship</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">出貨到倉庫 Ship to Warehouse</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">產品離開工廠</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong>Announce</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">產品發表 (US) Product Announcement</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">美國市場公告日</td></tr>
+<tr><td style="padding:8px;border-bottom:1px solid #f1f5f9"><strong>Street</strong></td><td style="padding:8px;border-bottom:1px solid #f1f5f9">上市銷售日期 On-shelf Date</td><td style="padding:8px;border-bottom:1px solid #f1f5f9">消費者可購買日</td></tr>
+</tbody>
+</table>
+</div>
+
+<div style="background:#fff;border-radius:10px;padding:20px;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
+<h3 style="color:#1e293b;margin-bottom:12px;font-size:1rem">📁 檔案結構 File Structure</h3>
+<pre style="background:#f8fafc;padding:12px;border-radius:6px;font-size:0.75rem;color:#475569;overflow-x:auto;border:1px solid #e2e8f0">
+Compliance Project Schedule/
+├── dashboard.html              ← 主要 Dashboard (本檔案)
+├── monitor_daemon.py           ← 自動監控程式 (主程式)
+├── setup_autostart.sh          ← macOS 開機自動啟動設定
+├── consolidated_schedules.json ← 所有案件排程資料
+├── personnel_data.json         ← 人員分配資料
+├── NPI_Status_Tracker.xlsx     ← SharePoint Excel 備份
+├── auth_state.json             ← Playwright 認證狀態
+├── monitor_cache.json          ← 監控狀態快取
+├── monitor.log                 ← 監控日誌
+├── fetch_confluence.py         ← Confluence 資料擷取
+├── auto_update.py              ← 舊版更新腳本 (已由 monitor_daemon.py 取代)
+└── download_with_profile.py    ← SharePoint 下載工具
+</pre>
+</div>
+
+</div><!-- end container -->
+</div><!-- end tab3 -->
+
+<div style="margin:20px;padding:15px;background:#fff;border-radius:8px;border:1px solid #e2e8f0;font-size:0.8rem;color:#475569">
+<strong>📡 Team Access 團隊存取方式:</strong><br>
+To access this dashboard 存取此儀表板: <code style="background:#f1f5f9;padding:2px 6px;border-radius:3px">http://[your-ip]:8080/dashboard.html</code><br>
+To start the monitor 啟動監控: <code style="background:#f1f5f9;padding:2px 6px;border-radius:3px">python3 monitor_daemon.py</code> | 
+Setup auto-start 設定自動啟動: <code style="background:#f1f5f9;padding:2px 6px;border-radius:3px">bash setup_autostart.sh</code>
+</div>
+<style>
+.t2-wrap{display:flex;height:100%;overflow:hidden}
+.t2-sidebar{width:260px;background:#fff;border-right:1px solid #e2e8f0;overflow-y:auto;padding:12px;flex-shrink:0}
+.t2-sidebar h2{font-size:14px;color:#2563eb;margin-bottom:10px;padding:6px 0;border-bottom:1px solid #e2e8f0}
+.t2-sidebar .filter-section{margin-bottom:8px}
+.t2-sidebar .filter-header{cursor:pointer;padding:6px 8px;background:#f8fafc;border-radius:4px;font-size:12px;font-weight:600;display:flex;justify-content:space-between;align-items:center;color:#1e293b;border:1px solid #e2e8f0}
+.t2-sidebar .filter-header:hover{background:#f1f5f9}
+.t2-sidebar .filter-header .arrow{transition:transform .2s}
+.t2-sidebar .filter-header .arrow.open{transform:rotate(90deg)}
+.t2-sidebar .filter-body{display:none;padding:4px 0 4px 8px;max-height:180px;overflow-y:auto}
+.t2-sidebar .filter-body.open{display:block}
+.t2-sidebar .filter-body label{display:block;font-size:11px;padding:3px 4px;cursor:pointer;color:#475569;border-radius:3px}
+.t2-sidebar .filter-body label:hover{background:#f1f5f9;color:#1e293b}
+.t2-sidebar .filter-body input[type=checkbox]{margin-right:6px;accent-color:#2563eb}
+.t2-btn-clear{width:100%;padding:6px;margin-top:8px;background:#f8fafc;border:1px solid #e2e8f0;color:#2563eb;border-radius:4px;cursor:pointer;font-size:11px}
+.t2-btn-clear:hover{background:#eff6ff}
+.t2-main{flex:1;display:flex;flex-direction:column;overflow:hidden}
+.t2-topbar{padding:10px 16px;background:#fff;border-bottom:1px solid #e2e8f0;display:flex;align-items:center;gap:16px}
+.t2-topbar h1{font-size:16px;color:#1e293b}
+.t2-loading-badge{background:#16a34a;color:#fff;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600}
+.t2-loading-badge.warn{background:#f59e0b}
+.t2-loading-badge.high{background:#dc2626}
+.t2-content{flex:1;overflow:auto;padding:12px;background:#f8fafc}
+.t2-gantt-container{margin-bottom:16px;overflow-x:auto;background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:8px}
+.t2-gantt-table{border-collapse:collapse;width:100%;min-width:1200px}
+.t2-gantt-table th,.t2-gantt-table td{padding:3px 6px;font-size:11px;border-bottom:1px solid #f1f5f9}
+.t2-gantt-table th{background:#f8fafc;color:#64748b;position:sticky;top:0;z-index:2;text-align:left}
+.t2-gantt-name{width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:#1e293b}
+.t2-gantt-bar-cell{position:relative;height:20px}
+.t2-bar{position:absolute;height:14px;top:3px;border-radius:3px;opacity:0.8}
+.t2-bar.evt{background:#dc2626}
+.t2-bar.dvt{background:#f59e0b}
+.t2-diamond{position:absolute;width:10px;height:10px;background:#16a34a;transform:rotate(45deg);top:5px}
+.t2-bar.dimmed{opacity:0.12}
+.t2-diamond.dimmed{opacity:0.12}
+.t2-data-table{width:100%;border-collapse:collapse;font-size:11px;background:#fff;border-radius:8px;border:1px solid #e2e8f0}
+.t2-data-table th{background:#f8fafc;color:#64748b;padding:6px 8px;text-align:left;position:sticky;top:0;border-bottom:1px solid #e2e8f0}
+.t2-data-table td{padding:5px 8px;border-bottom:1px solid #f1f5f9;color:#1e293b}
+.t2-data-table tr:hover td{background:#f8fafc}
+.t2-data-table tr.highlight td{background:#eff6ff}
+.t2-section-title{font-size:13px;color:#2563eb;margin:12px 0 6px;font-weight:600}
+.t2-legend{display:flex;gap:12px;align-items:center;font-size:11px;color:#64748b;margin-left:auto}
+.t2-legend span{display:flex;align-items:center;gap:4px}
+.t2-dot{width:10px;height:10px;border-radius:2px}
+</style>
+<script>
+function switchTab(n){
+  document.querySelectorAll('.tab-btn').forEach((b,i)=>b.classList.toggle('active',i===n-1));
+  document.getElementById('tab1').style.display=n===1?'block':'none';
+  document.getElementById('tab2').style.display=n===2?'flex':'none';
+  document.getElementById('tab3').style.display=n===3?'block':'none';
+}
+function filterProjects(type,e){
+  document.querySelectorAll('#tab1 .filters button').forEach(b=>b.classList.remove('active'));
+  if(e&&e.target)e.target.classList.add('active');
+  document.querySelectorAll('#tab1 tr[data-status]').forEach(row=>{
+    const phase=row.getAttribute('data-phase')||'';
+    let show=type==='all'||
+      (type==='evt'&&phase.toLowerCase().includes('evt'))||
+      (type==='dvt'&&phase.toLowerCase().includes('dvt'))||
+      (type==='mp'&&phase==='MP')||
+      (type==='prep'&&phase==='Prep')||
+      (type==='scoping'&&phase==='Scoping');
+    row.style.display=show?'':'none';
+  });
+}
+
+/* ===== Tab 1: Month Range Analysis ===== */
+const TAB1_SCHEDULES={"Cinco":{"evt":"12/05–12/22/25","dvt":"12/05–12/22/25"},"Flan":{"evt":"11/30/25–01/22/26","dvt":"02/05–03/06/26"},"Freesia":{"evt":"12/24/25–01/15/26","dvt":"02/04–03/06/26"},"Lionfish":{"evt":"12/09/25–02/13/26","dvt":"03/02–03/30/26"},"Chromis":{"evt":"12/09/25–02/11/26","dvt":"03/02–03/30/26"},"Osprey":{"evt":"12/03/25–02/11/26","dvt":"02/26–04/02/26"},"Orchid":{"evt":"10/20/25–01/22/26","dvt":"03/06–04/02/26"},"Scorpius":{"dvt":"01/19–02/26/26"},"Moonlight_r24":{"dvt":"01/05–01/09/26"},"Valkyrie":{"evt":"06/23–07/24/26"},"Sombrus":{"dvt":"02/02–03/20/26"},"Phantom_r24":{"dvt":"01/05–01/09/26"},"Prismal":{"dvt":"12/22/25–01/30/26"},"Huron":{"evt":"12/23–12/24/25"},"Newport":{"evt":"03/01–05/30/26","dvt":"05/06–05/13/26"},"PoE++":{"evt":"12/08/25–01/06/26"},"Mela":{"evt":"07/01–07/30/26"},"Coralfish":{"dvt":"05/01–05/15/26"},"White Rock":{"evt":"04/07–05/12/26","dvt":"05/19–05/25/26"},"Jewelfish":{"dvt":"05/01–05/30/26"},"Mount Wilson":{"evt":"02/03–04/14/26","dvt":"04/14–05/11/26"},"Vireo":{"dvt":"05/01–05/30/26"},"Blenny":{"evt":"03/27–06/30/26","dvt":"07/21–08/24/26"},"Cristo":{"evt":"04/28–05/30/26"},"Pencilfish":{"evt":"06/01–07/30/26"},"Dunlin":{"evt":"04/07–06/09/26"},"Snapper":{"evt":"06/01–06/30/26","dvt":"09/01–09/15/26"},"Opaleye":{"evt":"06/01–06/30/26","dvt":"09/01–09/15/26"},"Moray":{"evt":"06/01–06/30/26","dvt":"09/01–09/15/26"},"Tanami":{"evt":"05/15–06/15/26","dvt":"08/14–09/14/26"},"Black Rock":{"evt":"05/26–07/01/26","dvt":"09/02–09/29/26"},"Banjar":{"evt":"07/01–07/30/26","dvt":"08/14–08/30/26"},"Forsythia":{"dvt":"01/29–02/25/26"},"Tabernas":{"evt":"05/01–06/30/26"},"Kharan":{"evt":"03/01–05/30/26"},"Hexa":{"evt":"01/15–03/15/26"}};
+
+function initMonthSelectors(){
+  const fromSel=document.getElementById('monthFrom');
+  const toSel=document.getElementById('monthTo');
+  const months=[];
+  for(let y=2025;y<=2027;y++){
+    const startM=(y===2025)?10:0;
+    const endM=(y===2027)?5:11;
+    for(let m=startM;m<=endM;m++){
+      const label=new Date(y,m,1).toLocaleDateString('en',{month:'short',year:'numeric'});
+      months.push({y,m,label});
+    }
+  }
+  months.forEach((item,i)=>{
+    const opt1=document.createElement('option');opt1.value=i;opt1.textContent=item.label;
+    const opt2=document.createElement('option');opt2.value=i;opt2.textContent=item.label;
+    fromSel.appendChild(opt1);toSel.appendChild(opt2);
+  });
+  // Default: current month range (3 months)
+  const now=new Date();
+  const curIdx=months.findIndex(m=>m.y===now.getFullYear()&&m.m===now.getMonth());
+  if(curIdx>=0){fromSel.value=curIdx;toSel.value=Math.min(curIdx+2,months.length-1);}
+  window._mrMonths=months;
+  calcMonthRange();
+}
+
+function mrParseRange(s){
+  if(!s||s==='N/A'||s==='TBD'||s==='Shipped')return null;
+  s=s.replace(/~/g,'').trim();
+  const m1=s.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if(!m1)return null;
+  let y1=m1[3]?parseInt(m1[3]):26;if(y1<100)y1+=2000;
+  const d1=new Date(y1,parseInt(m1[1])-1,parseInt(m1[2]));
+  const parts=s.split(/[–\-]/);
+  if(parts.length>1){
+    const m2=parts[1].trim().match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+    if(m2){let y2=m2[3]?parseInt(m2[3]):y1;if(y2<100)y2+=2000;return[d1,new Date(y2,parseInt(m2[1])-1,parseInt(m2[2]))];}
+  }
+  return[d1,new Date(d1.getTime()+30*86400000)];
+}
+
+function calcMonthRange(){
+  const months=window._mrMonths;
+  if(!months)return;
+  const fromIdx=parseInt(document.getElementById('monthFrom').value);
+  const toIdx=parseInt(document.getElementById('monthTo').value);
+  const rangeStart=new Date(months[fromIdx].y,months[fromIdx].m,1);
+  const rangeEnd=new Date(months[toIdx].y,months[toIdx].m+1,0);// last day of toMonth
+
+  let evtProjects=[],dvtProjects=[];
+  for(const[name,sch] of Object.entries(TAB1_SCHEDULES)){
+    if(sch.evt){
+      const r=mrParseRange(sch.evt);
+      if(r&&r[0]<=rangeEnd&&r[1]>=rangeStart)evtProjects.push(name);
+    }
+    if(sch.dvt){
+      const r=mrParseRange(sch.dvt);
+      if(r&&r[0]<=rangeEnd&&r[1]>=rangeStart)dvtProjects.push(name);
+    }
+  }
+
+  document.getElementById('mrEvtCount').textContent=evtProjects.length;
+  document.getElementById('mrDvtCount').textContent=dvtProjects.length;
+  document.getElementById('mrTotalCount').textContent=evtProjects.length+dvtProjects.length;
+  document.getElementById('mrEvtList').textContent=evtProjects.length?evtProjects.join(', '):'無 None';
+  document.getElementById('mrDvtList').textContent=dvtProjects.length?dvtProjects.join(', '):'無 None';
+  document.getElementById('monthRangeResult').style.display='grid';
+}
+initMonthSelectors();
+
+/* ===== Tab 2: Personnel Loading ===== */
+(function(){
+const PERSONNEL=[{"name":"Dunlin","phase":"Phase 1.1","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":"imilab"},{"name":"Pencilfish","phase":"Phase 1.1","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":"imilab"},{"name":"Lanternfish","phase":"Phase 0","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Integrated Blink FLC","phase":"Phase 0","pm":"Fion Liu","rf":"Leo Guo","emc":"Leo Guo","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":""},{"name":"Coralfish","phase":"Phase 1.1","pm":"Fion Liu","rf":"David Hung, Leo Guo","emc":"Leo Guo","energy":"Fion Liu","safety":"Rally Chen","gma":"Fion Liu","cm":"Huaqin"},{"name":"Mount Wilson","phase":"Phase 1.1","pm":"Fion Liu","rf":"David Hung, Kevin Chang","emc":"Kevin Chang","energy":"Fion Liu","safety":"Fion Liu","gma":"Fion Liu","cm":"Luxshare"},{"name":"Altus","phase":"Phase 0","pm":"Fion Liu","rf":"David Hung","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"N/A","cm":""},{"name":"Nautilus","phase":"Phase 0","pm":"Fion Liu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Chutoro","phase":"Phase 0","pm":"Fion Liu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Vireo + Cayuga","phase":"Phase 1.1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"CNT"},{"name":"Jewelfish","phase":"Phase 1.1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"CNT"},{"name":"Valkyrie","phase":"Phase 1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Jay Chen","safety":"Slash Chang","gma":"Gino Liao","cm":"GTK"},{"name":"Chromis","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Lionfish","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Osprey","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Cuttlefish","phase":"Phase 0","pm":"Gino Liao","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Mela","phase":"Phase 1","pm":"Gino Liao","rf":"David Hung","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":"Leedarson"},
+{"name":"Orchid","phase":"Phase 3","pm":"Leo Guo, Yi-Ling Lin","rf":"Leo Guo","emc":"Leo Guo","energy":"Leo Guo","safety":"Leo Guo","gma":"Leo Guo, Yi-Ling Lin","cm":"GTK"},{"name":"Nocturne","phase":"Phase 1","pm":"Jay Chen","rf":"N/A","emc":"Jay Chen","energy":"N/A","safety":"Slash Chang","gma":"N/A","cm":"TBD"},{"name":"Otisco","phase":"Phase 0","pm":"Jay Chen","rf":"N/A","emc":"N/A","energy":"Jay Chen","safety":"N/A","gma":"N/A","cm":"TBD"},{"name":"Cayuga v2","phase":"Phase 0","pm":"Jay Chen","rf":"","emc":"","energy":"","safety":"","gma":"Jay Chen","cm":""},{"name":"Boschetto","phase":"Phase 0","pm":"Jay Chen","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Jay Chen","safety":"Jay Chen","gma":"Yoyo Chen","cm":"TBD"},{"name":"Snapper","phase":"Phase 1.1","pm":"Jay Chen, Yi-Ling Lin","rf":"Kevin Chang","emc":"Jay Chen","energy":"Rally Chen","safety":"Slash Chang","gma":"","cm":"CNT"},{"name":"Clematis","phase":"Phase 0","pm":"Leo Guo","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Windflower","phase":"Phase 0","pm":"Leo Guo","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Tanami","phase":"Phase 1.1","pm":"Leo Guo, Yi-Ling Lin","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Rally Chen","gma":"N/A","cm":"CNT"},{"name":"Freesia","phase":"Phase 3","pm":"Leo Guo, Yi-Ling Lin","rf":"Leo Guo","emc":"Leo Guo","energy":"Rally Chen","safety":"Rally Chen","gma":"Leo Guo, Yi-Ling Lin","cm":"Huaqin"},
+{"name":"Tabernas","phase":"Phase 1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"N/A","safety":"Slash Chang","gma":"Maggie Wu","cm":"Huaqin"},{"name":"Kharan","phase":"Phase 1.1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"N/A","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Banjar","phase":"Phase 1.1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":""},{"name":"Hawkfish","phase":"Phase 1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Bigfoot v2","phase":"Phase 0","pm":"Maggie Wu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},
+{"name":"Monte","phase":"Phase 3","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Aztech"},{"name":"Blenny","phase":"Phase 1.1","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"N/A","cm":"Huaqin"},{"name":"Cristo","phase":"Phase 1.1","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"N/A","cm":"Huaqin"},{"name":"Zorilla","phase":"Phase 4","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"N/A","safety":"Rally Chen, Slash Chang","gma":"Yoyo Chen","cm":"CMT"},{"name":"Lutra","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"Miranda Hsu","cm":""},{"name":"Auto Battery Jumper","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Nigiri","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Padlock","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},
+{"name":"Petunia","phase":"Phase 1","pm":"Rally Chen","rf":"N/A","emc":"Jay Chen","energy":"N/A","safety":"Rally Chen","gma":"","cm":"Deevan"},{"name":"Crocus","phase":"Phase 0","pm":"Rally Chen","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Waterlilly","phase":"Phase 0","pm":"Rally Chen","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Navion","phase":"Phase 0","pm":"Rally Chen","rf":"N/A","emc":"N/A","energy":"N/A","safety":"N/A","gma":"N/A","cm":"TBD"},{"name":"Capella","phase":"Phase 0","pm":"Rally Chen","rf":"N/A","emc":"N/A","energy":"N/A","safety":"Rally Chen","gma":"N/A","cm":"GCPC"},{"name":"Voluna","phase":"Phase 0","pm":"Rally Chen, Slash Chang","rf":"TBD","emc":"TBD","energy":"TBD","safety":"TBD","gma":"TBD","cm":"TBD"},{"name":"Nashira","phase":"Phase 0","pm":"Rally Chen, Slash Chang","rf":"N/A","emc":"N/A","energy":"N/A","safety":"N/A","gma":"N/A","cm":"Power 7"},{"name":"Moray","phase":"Phase 1.1","pm":"Rally Chen, Yi-Ling Lin","rf":"Kevin Chang","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":"CNT"},{"name":"Opaleye","phase":"Phase 1.1","pm":"Rally Chen, Yi-Ling Lin","rf":"Kevin Chang","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":"CNT"},
+{"name":"Huron","phase":"Phase 2","pm":"Slash Chang","rf":"N/A","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"Jay Chen","cm":"Leedarson"},{"name":"Hapuka Light","phase":"Phase 2","pm":"Slash Chang","rf":"N/A","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"N/A","cm":"Leedarson"},{"name":"Seaweed","phase":"Phase 0","pm":"Slash Chang","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Monte 10W adapter","phase":"Phase 0","pm":"Slash Chang","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Rivnar","phase":"Phase 0","pm":"Slash Chang","rf":"","emc":"","energy":"","safety":"","gma":"Slash Chang","cm":""},{"name":"Snook","phase":"Phase 0","pm":"Slash Chang","rf":"N/A","emc":"Jay Chen","energy":"","safety":"","gma":"","cm":""},{"name":"Steelhead","phase":"Phase 0","pm":"Slash Chang","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Falcon","phase":"","pm":"Slash Chang","rf":"N/A","emc":"","energy":"","safety":"Slash Chang","gma":"","cm":""},{"name":"Fossa","phase":"Phase 1","pm":"Slash Chang","rf":"N/A","emc":"Jay Chen","energy":"Slash Chang","safety":"Slash Chang","gma":"","cm":""},
+{"name":"Black Rock","phase":"Phase 1.1","pm":"Yi-Ling Lin","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yi-Ling Lin","cm":"Huaqin"},{"name":"Pansy","phase":"Phase 1","pm":"Yi-Ling Lin","rf":"David Hung, Kevin Chang","emc":"David Hung, Kevin Chang","energy":"Slash Chang","safety":"Slash Chang","gma":"Yi-Ling Lin","cm":""},{"name":"Poppy","phase":"Phase 0","pm":"Yi-Ling Lin","rf":"David Hung, Kevin Chang","emc":"David Hung, Kevin Chang","energy":"N/A","safety":"Slash Chang","gma":"Yi-Ling Lin","cm":""},{"name":"Newport","phase":"Phase 1.1","pm":"Yi-Ling Lin","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"GTK"},{"name":"White Rock","phase":"Phase 1.1","pm":"Yi-Ling Lin","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yi-Ling Lin","cm":"Huaqin"},{"name":"Seafoam","phase":"Phase 1","pm":"Yi-Ling Lin","rf":"N/A","emc":"N/A","energy":"N/A","safety":"N/A","gma":"N/A","cm":"Tonly"},{"name":"Anchovy","phase":"Phase 0","pm":"Yi-Ling Lin","rf":"David Hung","emc":"Leo Guo","energy":"Slash Chang","safety":"Slash Chang","gma":"Yi-Ling Lin","cm":""},{"name":"Sashimi","phase":"Phase 0","pm":"Yi-Ling Lin","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Flounder","phase":"Phase 0","pm":"Yi-Ling Lin","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},
+{"name":"Project Ferdinand","phase":"Phase 5","pm":"Yoyo Chen","rf":"N/A","emc":"N/A","energy":"N/A","safety":"N/A","gma":"","cm":""},{"name":"Bristlecone","phase":"Phase 0","pm":"Kevin Chang, Maggie Wu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"Leedarson"},{"name":"Unicorn","phase":"Phase 1","pm":"Gino Liao","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":""}];
+const SCHEDULES={"Cinco":{"evt":"12/05–12/22/25","dvt":"12/05–12/22/25","ok2mp":"2026-01-30"},"Flan":{"evt":"11/30/25–01/22/26","dvt":"02/05–03/06/26","ok2mp":"2026-03-19"},"Freesia":{"evt":"12/24/25–01/15/26","dvt":"02/04–03/06/26","ok2mp":"2026-03-20"},"Lionfish":{"evt":"12/09/25–02/13/26","dvt":"03/02–03/30/26","ok2mp":"2026-04-02"},"Chromis":{"evt":"12/09/25–02/11/26","dvt":"03/02–03/30/26","ok2mp":"2026-04-02"},"Osprey":{"evt":"12/03/25–02/11/26","dvt":"02/26–04/02/26","ok2mp":"2026-04-02"},"Orchid":{"evt":"10/20/25–01/22/26","dvt":"03/06–04/02/26","ok2mp":"2026-03-20"},"Scorpius":{"dvt":"01/19–02/26/26","ok2mp":"2026-03-09"},"Moonlight_r24":{"dvt":"01/05–01/09/26","ok2mp":"2026-01-09"},"Valkyrie":{"evt":"06/23–07/24/26","ok2mp":"2026-12-15"},"Zorilla":{"ok2mp":"Shipped"},"Forsythia":{"dvt":"01/29–02/25/26","ok2mp":"2026-02-13"},"Sombrus":{"dvt":"02/02–03/20/26"},"Phantom_r24":{"dvt":"01/05–01/09/26"},"Prismal":{"dvt":"12/22/25–01/30/26"},"Monte":{"ok2mp":"2026-05-20"},"Huron":{"evt":"12/23–12/24/25","ok2mp":"2026-05-27"},"Petunia":{"ok2mp":"2026-05-06"},"Newport":{"evt":"~03–05/2026","dvt":"05/06–05/13/26","ok2mp":"~2026-05-20"},"PoE++":{"evt":"12/08/25–01/06/26"},"Mela":{"evt":"~07/2026"},"Coralfish":{"dvt":"~05/08/26"},"Kharan":{"ok2mp":"2026-07-09"},"White Rock":{"evt":"04/07–05/12/26","dvt":"05/19–05/25/26","ok2mp":"2026-05-25"},"Jewelfish":{"dvt":"~05/2026"},"Hexa":{"ok2mp":"2026-03-16"},"Mount Wilson":{"evt":"02/03–04/14/26","dvt":"04/14–05/11/26","ok2mp":"2026-05-11"},"Vireo":{"dvt":"~05/2026"},"Blenny":{"evt":"03/27–06/30/26","dvt":"07/21–08/24/26","ok2mp":"2026-09-23"},"Cristo":{"evt":"~04/28/2026"},"Pencilfish":{"evt":"~06–07/2026"},"Dunlin":{"evt":"~04/07–06/09/26"},"Snapper":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Opaleye":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Moray":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Tanami":{"evt":"~05/15/26","dvt":"~08/14/26","ok2mp":"2026-10-12"},"Unicorn":{},"Altus":{},"Black Rock":{"evt":"05/26–07/01/26","dvt":"09/02–09/29/26","ok2mp":"2026-09-29"},"Pansy":{"ok2mp":"2026-11-25"},"Poppy":{"ok2mp":"2026-11-25"},"Hawkfish":{},"Banjar":{"evt":"~Jul 2026","dvt":"08/14/26","ok2mp":"2026-09-18"},"Tabernas":{},"Nocturne":{},"Fossa":{}};
+const ROLES=['pm','rf','emc','energy','safety','gma','cm'];
+const ROLE_LABELS={pm:'PM 專案經理',rf:'RF 射頻',emc:'EMC 電磁相容',energy:'Energy 能效',safety:'Safety 安全',gma:'GMA 全球市場',cm:'CM 製造商'};
+const START=new Date(2025,10,1),END=new Date(2027,5,30);
+const TOTAL_DAYS=(END-START)/(86400000);
+function dateToPos(d){return Math.max(0,Math.min(100,((d-START)/(86400000))/TOTAL_DAYS*100));}
+function parseRange(s){
+  if(!s||s==='N/A'||s==='TBD'||s==='Shipped')return null;
+  s=s.replace(/~/g,'').trim();
+  const m1=s.match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+  if(!m1)return null;
+  let y1=m1[3]?parseInt(m1[3]):26;if(y1<100)y1+=2000;
+  const d1=new Date(y1,parseInt(m1[1])-1,parseInt(m1[2]));
+  const parts=s.split(/[–\-]/);
+  if(parts.length>1){
+    const m2=parts[1].trim().match(/(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?/);
+    if(m2){let y2=m2[3]?parseInt(m2[3]):y1;if(y2<100)y2+=2000;return[d1,new Date(y2,parseInt(m2[1])-1,parseInt(m2[2]))];}
+  }
+  return[d1,new Date(d1.getTime()+14*86400000)];
+}
+function parsePoint(s){
+  if(!s||s==='TBD'||s==='N/A'||s==='Shipped')return null;
+  const m=s.match(/(\d{4})-(\d{2})-(\d{2})/);
+  if(m)return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
+  return null;
+}
+function getPeople(role){
+  const set=new Set();
+  PERSONNEL.forEach(p=>{
+    const v=p[role];if(!v||v==='N/A'||v==='TBD')return;
+    v.split(',').forEach(n=>{const t=n.trim();if(t&&t!=='N/A'&&t!=='TBD'&&t!=='Lab 126')set.add(t);});
+  });
+  return [...set].sort();
+}
+let selectedFilters={};
+function buildFilters(){
+  const container=document.getElementById('t2filters');
+  ROLES.forEach(role=>{
+    const people=getPeople(role);if(!people.length)return;
+    selectedFilters[role]=new Set();
+    const sec=document.createElement('div');sec.className='filter-section';
+    sec.innerHTML=`<div class="filter-header" onclick="this.querySelector('.arrow').classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>${ROLE_LABELS[role]} (${people.length})</span><span class="arrow">▶</span></div><div class="filter-body">${people.map(p=>`<label><input type="checkbox" data-role="${role}" value="${p}" onchange="t2toggle(this)">${p}</label>`).join('')}</div>`;
+    container.appendChild(sec);
+  });
+}
+function t2toggle(cb){
+  const role=cb.dataset.role,val=cb.value;
+  if(cb.checked)selectedFilters[role].add(val);else selectedFilters[role].delete(val);
+  render();
+}
+window.t2clearAll=function(){
+  Object.values(selectedFilters).forEach(s=>s.clear());
+  document.querySelectorAll('#t2filters input[type=checkbox]').forEach(c=>c.checked=false);
+  render();
+};
+function isHighlighted(proj){
+  const anyFilter=Object.values(selectedFilters).some(s=>s.size>0);
+  if(!anyFilter)return true;
+  for(const role of ROLES){
+    if(!selectedFilters[role]||!selectedFilters[role].size)continue;
+    const val=proj[role]||'';
+    const people=val.split(',').map(s=>s.trim());
+    if(people.some(p=>selectedFilters[role].has(p)))return true;
+  }
+  return false;
+}
+function render(){
+  const months=[];
+  for(let d=new Date(START);d<=END;d.setMonth(d.getMonth()+1)){
+    months.push(new Date(d));
+  }
+  // Filter out Lab 126 projects
+  const data=PERSONNEL.filter(p=>!p.pm.includes('Lab 126'));
+  // Gantt header
+  let hhtml='<tr><th class="t2-gantt-name">專案 Project</th>';
+  months.forEach(m=>{const lbl=m.toLocaleDateString('en',{month:'short',year:'2-digit'});hhtml+=`<th style="min-width:50px;text-align:center;font-size:10px">${lbl}</th>`;});
+  hhtml+='</tr>';
+  document.getElementById('t2ganttHead').innerHTML=hhtml;
+  // Gantt body
+  let bhtml='';
+  data.forEach(proj=>{
+    const hl=isHighlighted(proj);
+    const sch=SCHEDULES[proj.name]||{};
+    const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt),mpP=parsePoint(sch.ok2mp);
+    const dim=hl?'':'dimmed';
+    bhtml+=`<tr><td class="t2-gantt-name" style="opacity:${hl?1:0.3}">${proj.name}</td>`;
+    months.forEach((m,i)=>{
+      const mStart=m,mEnd=new Date(m.getFullYear(),m.getMonth()+1,0);
+      let cell='';
+      if(evtR){
+        const[s,e]=evtR;
+        if(s<=mEnd&&e>=mStart){
+          const l=Math.max(0,(s-mStart)/(mEnd-mStart)*100);
+          const r=Math.min(100,(e-mStart)/(mEnd-mStart)*100);
+          cell+=`<div class="t2-bar evt ${dim}" style="left:${l}%;width:${Math.max(4,r-l)}%"></div>`;
+        }
+      }
+      if(dvtR){
+        const[s,e]=dvtR;
+        if(s<=mEnd&&e>=mStart){
+          const l=Math.max(0,(s-mStart)/(mEnd-mStart)*100);
+          const r=Math.min(100,(e-mStart)/(mEnd-mStart)*100);
+          cell+=`<div class="t2-bar dvt ${dim}" style="left:${l}%;width:${Math.max(4,r-l)}%"></div>`;
+        }
+      }
+      if(mpP&&mpP>=mStart&&mpP<=mEnd){
+        const l=(mpP-mStart)/(mEnd-mStart)*100;
+        cell+=`<div class="t2-diamond ${dim}" style="left:${l}%"></div>`;
+      }
+      bhtml+=`<td class="t2-gantt-bar-cell">${cell}</td>`;
+    });
+    bhtml+='</tr>';
+  });
+  document.getElementById('t2ganttBody').innerHTML=bhtml;
+  // Data table
+  let thead='<tr><th>專案 Project</th><th>Phase 階段</th><th>PM</th><th>RF</th><th>EMC</th><th>Energy</th><th>Safety</th><th>GMA</th><th>CM</th></tr>';
+  document.getElementById('t2tableHead').innerHTML=thead;
+  let tbody='';
+  data.forEach(proj=>{
+    const hl=isHighlighted(proj);
+    tbody+=`<tr class="${hl?'highlight':''}" style="opacity:${hl?1:0.4}"><td><strong>${proj.name}</strong></td><td>${proj.phase}</td><td>${proj.pm}</td><td>${proj.rf}</td><td>${proj.emc}</td><td>${proj.energy}</td><td>${proj.safety}</td><td>${proj.gma}</td><td>${proj.cm}</td></tr>`;
+  });
+  document.getElementById('t2tableBody').innerHTML=tbody;
+  // Summary
+  const anyFilter=Object.values(selectedFilters).some(s=>s.size>0);
+  const activeCount=anyFilter?data.filter(p=>isHighlighted(p)).length:data.length;
+  const cls=activeCount>15?'high':activeCount>8?'warn':'';
+  document.getElementById('t2loadingSummary').innerHTML=anyFilter?`<span class="t2-loading-badge ${cls}">${activeCount} 專案 projects</span>`:'';
+
+  // EVT/DVT phase counts for filtered projects
+  const filteredProjects=anyFilter?data.filter(p=>isHighlighted(p)):data;
+  let evtCount=0,dvtCount=0,evtNames=[],dvtNames=[];
+  filteredProjects.forEach(proj=>{
+    const sch=SCHEDULES[proj.name]||{};
+    if(sch.evt&&sch.evt!=='N/A'&&sch.evt!=='TBD'){evtCount++;evtNames.push(proj.name);}
+    if(sch.dvt&&sch.dvt!=='N/A'&&sch.dvt!=='TBD'){dvtCount++;dvtNames.push(proj.name);}
+  });
+  const pcEl=document.getElementById('t2PhaseCounts');
+  if(anyFilter){
+    pcEl.innerHTML=`<span style="background:#fef2f2;border:1px solid #fecaca;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#dc2626" title="${evtNames.join(', ')}">🔥 EVT: ${evtCount}</span><span style="background:#fffbeb;border:1px solid #fed7aa;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#f59e0b" title="${dvtNames.join(', ')}">🔥 DVT: ${dvtCount}</span>`;
+  } else {
+    pcEl.innerHTML='';
+  }
+}
+buildFilters();render();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,24 @@
+# Auth & secrets
+auth_state.json
+monitor_cache.json
+sharepoint_state.json
+update_cache.json
+
+# Logs
+*.log
+monitor_stdout.log
+monitor_stderr.log
+
+# Excel binary
+NPI_Status_Tracker.xlsx
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+
+# OS
+.DS_Store
+
+# VS Code
+.vscode/
