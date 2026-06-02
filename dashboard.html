@@ -286,6 +286,13 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8faf
 <h2>📋 人員篩選 Personnel Filter</h2>
 <div id="t2filters"></div>
 <button class="t2-btn-clear" onclick="t2clearAll()">清除所有篩選 Clear All</button>
+<div style="margin-top:12px;padding-top:10px;border-top:1px solid #e2e8f0">
+<h2 style="font-size:13px;color:#2563eb;margin-bottom:8px">📆 月份區間 Month Range</h2>
+<div style="display:flex;flex-direction:column;gap:6px;font-size:11px">
+<div style="display:flex;align-items:center;gap:4px"><label style="color:#64748b;width:30px">From</label><select id="t2MonthFrom" onchange="render()" style="flex:1;padding:3px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px"></select></div>
+<div style="display:flex;align-items:center;gap:4px"><label style="color:#64748b;width:30px">To</label><select id="t2MonthTo" onchange="render()" style="flex:1;padding:3px 4px;border:1px solid #e2e8f0;border-radius:4px;font-size:11px"></select></div>
+</div>
+</div>
 </div>
 <div class="t2-main">
 <div class="t2-topbar">
@@ -299,6 +306,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8faf
 </div>
 </div>
 <div class="t2-content">
+<div id="t2LoadingWeight" style="display:none;background:#fff;border-radius:8px;border:1px solid #e2e8f0;padding:12px;margin-bottom:12px"></div>
 <div class="t2-section-title">甘特圖 Timeline (Nov 2025 – Jun 2027)</div>
 <div class="t2-gantt-container"><table class="t2-gantt-table"><thead id="t2ganttHead"></thead><tbody id="t2ganttBody"></tbody></table></div>
 <div class="t2-section-title">專案列表 Project Table</div>
@@ -571,7 +579,8 @@ initMonthSelectors();
 
 /* ===== Tab 2: Personnel Loading ===== */
 (function(){
-const PERSONNEL=[{"name":"Dunlin","phase":"Phase 1.1","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":"imilab"},{"name":"Pencilfish","phase":"Phase 1.1","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":"imilab"},{"name":"Lanternfish","phase":"Phase 0","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Integrated Blink FLC","phase":"Phase 0","pm":"Fion Liu","rf":"Leo Guo","emc":"Leo Guo","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":""},{"name":"Coralfish","phase":"Phase 1.1","pm":"Fion Liu","rf":"David Hung, Leo Guo","emc":"Leo Guo","energy":"Fion Liu","safety":"Rally Chen","gma":"Fion Liu","cm":"Huaqin"},{"name":"Mount Wilson","phase":"Phase 1.1","pm":"Fion Liu","rf":"David Hung, Kevin Chang","emc":"Kevin Chang","energy":"Fion Liu","safety":"Fion Liu","gma":"Fion Liu","cm":"Luxshare"},{"name":"Altus","phase":"Phase 0","pm":"Fion Liu","rf":"David Hung","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"N/A","cm":""},{"name":"Nautilus","phase":"Phase 0","pm":"Fion Liu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Chutoro","phase":"Phase 0","pm":"Fion Liu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Vireo + Cayuga","phase":"Phase 1.1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"CNT"},{"name":"Jewelfish","phase":"Phase 1.1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"CNT"},{"name":"Valkyrie","phase":"Phase 1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Jay Chen","safety":"Slash Chang","gma":"Gino Liao","cm":"GTK"},{"name":"Chromis","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Lionfish","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Osprey","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Cuttlefish","phase":"Phase 0","pm":"Gino Liao","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Mela","phase":"Phase 1","pm":"Gino Liao","rf":"David Hung","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":"Leedarson"},
+const PERSONNEL=[{"name":"Dunlin","phase":"Phase 1.1","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":"imilab"},{"name":"Pencilfish","phase":"Phase 1.1","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":"imilab"},{"name":"Lanternfish","phase":"Phase 0","pm":"David Hung, Maggie Wu","rf":"David Hung","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Integrated Blink FLC","phase":"Phase 0","pm":"Fion Liu","rf":"Leo Guo","emc":"Leo Guo","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":""},{"name":"Coralfish","phase":"Phase 1.1","pm":"Fion Liu","rf":"David Hung, Leo Guo","emc":"Leo Guo","energy":"Fion Liu","safety":"Rally Chen","gma":"Fion Liu","cm":"Huaqin"},{"name":"Mount Wilson","phase":"Phase 1.1","pm":"Fion Liu","rf":"David Hung, Kevin Chang","emc":"Kevin Chang","energy":"Fion Liu","safety":"Fion Liu","gma":"Fion Liu","cm":"Luxshare"},{"name":"Altus","phase":"Phase 0","pm":"Fion Liu","rf":"David Hung","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"N/A","cm":""},{"name":"Nautilus","phase":"Phase 0","pm":"Fion Liu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Chutoro","phase":"Phase 0","pm":"Fion Liu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},
+{"name":"Vireo + Cayuga","phase":"Phase 1.1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"CNT"},{"name":"Jewelfish","phase":"Phase 1.1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"CNT"},{"name":"Valkyrie","phase":"Phase 1","pm":"Gino Liao","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Jay Chen","safety":"Slash Chang","gma":"Gino Liao","cm":"GTK"},{"name":"Chromis","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Lionfish","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Osprey","phase":"Phase 3","pm":"Gino Liao","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Cuttlefish","phase":"Phase 0","pm":"Gino Liao","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Mela","phase":"Phase 1","pm":"Gino Liao","rf":"David Hung","emc":"Jay Chen","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":"Leedarson"},
 {"name":"Orchid","phase":"Phase 3","pm":"Leo Guo, Yi-Ling Lin","rf":"Leo Guo","emc":"Leo Guo","energy":"Leo Guo","safety":"Leo Guo","gma":"Leo Guo, Yi-Ling Lin","cm":"GTK"},{"name":"Nocturne","phase":"Phase 1","pm":"Jay Chen","rf":"N/A","emc":"Jay Chen","energy":"N/A","safety":"Slash Chang","gma":"N/A","cm":"TBD"},{"name":"Otisco","phase":"Phase 0","pm":"Jay Chen","rf":"N/A","emc":"N/A","energy":"Jay Chen","safety":"N/A","gma":"N/A","cm":"TBD"},{"name":"Cayuga v2","phase":"Phase 0","pm":"Jay Chen","rf":"","emc":"","energy":"","safety":"","gma":"Jay Chen","cm":""},{"name":"Boschetto","phase":"Phase 0","pm":"Jay Chen","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Jay Chen","safety":"Jay Chen","gma":"Yoyo Chen","cm":"TBD"},{"name":"Snapper","phase":"Phase 1.1","pm":"Jay Chen, Yi-Ling Lin","rf":"Kevin Chang","emc":"Jay Chen","energy":"Rally Chen","safety":"Slash Chang","gma":"","cm":"CNT"},{"name":"Clematis","phase":"Phase 0","pm":"Leo Guo","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Windflower","phase":"Phase 0","pm":"Leo Guo","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Tanami","phase":"Phase 1.1","pm":"Leo Guo, Yi-Ling Lin","rf":"Leo Guo","emc":"Leo Guo","energy":"Jay Chen","safety":"Rally Chen","gma":"N/A","cm":"CNT"},{"name":"Freesia","phase":"Phase 3","pm":"Leo Guo, Yi-Ling Lin","rf":"Leo Guo","emc":"Leo Guo","energy":"Rally Chen","safety":"Rally Chen","gma":"Leo Guo, Yi-Ling Lin","cm":"Huaqin"},
 {"name":"Tabernas","phase":"Phase 1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"N/A","safety":"Slash Chang","gma":"Maggie Wu","cm":"Huaqin"},{"name":"Kharan","phase":"Phase 1.1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"N/A","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Banjar","phase":"Phase 1.1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Rally Chen","safety":"Rally Chen","gma":"","cm":""},{"name":"Hawkfish","phase":"Phase 1","pm":"Maggie Wu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"Huaqin"},{"name":"Bigfoot v2","phase":"Phase 0","pm":"Maggie Wu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},
 {"name":"Monte","phase":"Phase 3","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"Jay Chen","safety":"Slash Chang","gma":"Yoyo Chen","cm":"Aztech"},{"name":"Blenny","phase":"Phase 1.1","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"N/A","cm":"Huaqin"},{"name":"Cristo","phase":"Phase 1.1","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"N/A","cm":"Huaqin"},{"name":"Zorilla","phase":"Phase 4","pm":"Miranda Hsu","rf":"Kevin Chang","emc":"Kevin Chang","energy":"N/A","safety":"Rally Chen, Slash Chang","gma":"Yoyo Chen","cm":"CMT"},{"name":"Lutra","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"Miranda Hsu","cm":""},{"name":"Auto Battery Jumper","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Nigiri","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},{"name":"Padlock","phase":"Phase 0","pm":"Miranda Hsu","rf":"","emc":"","energy":"","safety":"","gma":"","cm":""},
@@ -582,6 +591,7 @@ const PERSONNEL=[{"name":"Dunlin","phase":"Phase 1.1","pm":"David Hung, Maggie W
 const SCHEDULES={"Cinco":{"evt":"12/05–12/22/25","dvt":"12/05–12/22/25","ok2mp":"2026-01-30"},"Flan":{"evt":"11/30/25–01/22/26","dvt":"02/05–03/06/26","ok2mp":"2026-03-19"},"Freesia":{"evt":"12/24/25–01/15/26","dvt":"02/04–03/06/26","ok2mp":"2026-03-20"},"Lionfish":{"evt":"12/09/25–02/13/26","dvt":"03/02–03/30/26","ok2mp":"2026-04-02"},"Chromis":{"evt":"12/09/25–02/11/26","dvt":"03/02–03/30/26","ok2mp":"2026-04-02"},"Osprey":{"evt":"12/03/25–02/11/26","dvt":"02/26–04/02/26","ok2mp":"2026-04-02"},"Orchid":{"evt":"10/20/25–01/22/26","dvt":"03/06–04/02/26","ok2mp":"2026-03-20"},"Scorpius":{"dvt":"01/19–02/26/26","ok2mp":"2026-03-09"},"Moonlight_r24":{"dvt":"01/05–01/09/26","ok2mp":"2026-01-09"},"Valkyrie":{"evt":"06/23–07/24/26","ok2mp":"2026-12-15"},"Zorilla":{"ok2mp":"Shipped"},"Forsythia":{"dvt":"01/29–02/25/26","ok2mp":"2026-02-13"},"Sombrus":{"dvt":"02/02–03/20/26"},"Phantom_r24":{"dvt":"01/05–01/09/26"},"Prismal":{"dvt":"12/22/25–01/30/26"},"Monte":{"ok2mp":"2026-05-20"},"Huron":{"evt":"12/23–12/24/25","ok2mp":"2026-05-27"},"Petunia":{"ok2mp":"2026-05-06"},"Newport":{"evt":"~03–05/2026","dvt":"05/06–05/13/26","ok2mp":"~2026-05-20"},"PoE++":{"evt":"12/08/25–01/06/26"},"Mela":{"evt":"~07/2026"},"Coralfish":{"dvt":"~05/08/26"},"Kharan":{"ok2mp":"2026-07-09"},"White Rock":{"evt":"04/07–05/12/26","dvt":"05/19–05/25/26","ok2mp":"2026-05-25"},"Jewelfish":{"dvt":"~05/2026"},"Hexa":{"ok2mp":"2026-03-16"},"Mount Wilson":{"evt":"02/03–04/14/26","dvt":"04/14–05/11/26","ok2mp":"2026-05-11"},"Vireo":{"dvt":"~05/2026"},"Blenny":{"evt":"03/27–06/30/26","dvt":"07/21–08/24/26","ok2mp":"2026-09-23"},"Cristo":{"evt":"~04/28/2026"},"Pencilfish":{"evt":"~06–07/2026"},"Dunlin":{"evt":"~04/07–06/09/26"},"Snapper":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Opaleye":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Moray":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Tanami":{"evt":"~05/15/26","dvt":"~08/14/26","ok2mp":"2026-10-12"},"Unicorn":{},"Altus":{},"Black Rock":{"evt":"05/26–07/01/26","dvt":"09/02–09/29/26","ok2mp":"2026-09-29"},"Pansy":{"ok2mp":"2026-11-25"},"Poppy":{"ok2mp":"2026-11-25"},"Hawkfish":{},"Banjar":{"evt":"~Jul 2026","dvt":"08/14/26","ok2mp":"2026-09-18"},"Tabernas":{},"Nocturne":{},"Fossa":{}};
 const ROLES=['pm','rf','emc','energy','safety','gma','cm'];
 const ROLE_LABELS={pm:'PM 專案經理',rf:'RF 射頻',emc:'EMC 電磁相容',energy:'Energy 能效',safety:'Safety 安全',gma:'GMA 全球市場',cm:'CM 製造商'};
+const ROLE_WEIGHTS={pm:0.3,rf:0.2,emc:0.1,energy:0.1,safety:0.2,gma:0.1};
 const START=new Date(2025,10,1),END=new Date(2027,5,30);
 const TOTAL_DAYS=(END-START)/(86400000);
 function dateToPos(d){return Math.max(0,Math.min(100,((d-START)/(86400000))/TOTAL_DAYS*100));}
@@ -613,14 +623,52 @@ function getPeople(role){
   });
   return [...set].sort();
 }
+// Month selector for Tab2
+function initT2MonthSelectors(){
+  const fromSel=document.getElementById('t2MonthFrom');
+  const toSel=document.getElementById('t2MonthTo');
+  const months=[];
+  for(let y=2025;y<=2027;y++){
+    const startM=(y===2025)?10:0;
+    const endM=(y===2027)?5:11;
+    for(let m=startM;m<=endM;m++){
+      const label=new Date(y,m,1).toLocaleDateString('en',{month:'short',year:'numeric'});
+      months.push({y,m,label});
+    }
+  }
+  months.forEach((item,i)=>{
+    fromSel.appendChild(new Option(item.label,i));
+    toSel.appendChild(new Option(item.label,i));
+  });
+  // Default: all months (full range)
+  fromSel.value=0;
+  toSel.value=months.length-1;
+  window._t2Months=months;
+}
+function getT2MonthRange(){
+  const months=window._t2Months;
+  if(!months)return{start:START,end:END};
+  const fromIdx=parseInt(document.getElementById('t2MonthFrom').value);
+  const toIdx=parseInt(document.getElementById('t2MonthTo').value);
+  return{
+    start:new Date(months[fromIdx].y,months[fromIdx].m,1),
+    end:new Date(months[toIdx].y,months[toIdx].m+1,0)
+  };
+}
+function rangeOverlaps(r,rangeStart,rangeEnd){
+  if(!r)return false;
+  return r[0]<=rangeEnd&&r[1]>=rangeStart;
+}
+
 let selectedFilters={};
 function buildFilters(){
   const container=document.getElementById('t2filters');
+  container.innerHTML='';
   ROLES.forEach(role=>{
     const people=getPeople(role);if(!people.length)return;
-    selectedFilters[role]=new Set();
+    selectedFilters[role]=selectedFilters[role]||new Set();
     const sec=document.createElement('div');sec.className='filter-section';
-    sec.innerHTML=`<div class="filter-header" onclick="this.querySelector('.arrow').classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>${ROLE_LABELS[role]} (${people.length})</span><span class="arrow">▶</span></div><div class="filter-body">${people.map(p=>`<label><input type="checkbox" data-role="${role}" value="${p}" onchange="t2toggle(this)">${p}</label>`).join('')}</div>`;
+    sec.innerHTML=`<div class="filter-header" onclick="this.querySelector('.arrow').classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>${ROLE_LABELS[role]} (${people.length})</span><span class="arrow">▶</span></div><div class="filter-body">${people.map(p=>`<label><input type="checkbox" data-role="${role}" value="${p}" ${selectedFilters[role].has(p)?'checked':''} onchange="t2toggle(this)">${p}</label>`).join('')}</div>`;
     container.appendChild(sec);
   });
 }
@@ -650,13 +698,15 @@ function render(){
   for(let d=new Date(START);d<=END;d.setMonth(d.getMonth()+1)){
     months.push(new Date(d));
   }
-  // Filter out Lab 126 projects
   const data=PERSONNEL.filter(p=>!p.pm.includes('Lab 126'));
+  const mr=getT2MonthRange();
+
   // Gantt header
   let hhtml='<tr><th class="t2-gantt-name">專案 Project</th>';
   months.forEach(m=>{const lbl=m.toLocaleDateString('en',{month:'short',year:'2-digit'});hhtml+=`<th style="min-width:50px;text-align:center;font-size:10px">${lbl}</th>`;});
   hhtml+='</tr>';
   document.getElementById('t2ganttHead').innerHTML=hhtml;
+
   // Gantt body
   let bhtml='';
   data.forEach(proj=>{
@@ -693,36 +743,89 @@ function render(){
     bhtml+='</tr>';
   });
   document.getElementById('t2ganttBody').innerHTML=bhtml;
-  // Data table
-  let thead='<tr><th>專案 Project</th><th>Phase 階段</th><th>PM</th><th>RF</th><th>EMC</th><th>Energy</th><th>Safety</th><th>GMA</th><th>CM</th></tr>';
+
+  // Data table with EVT/DVT status
+  let thead='<tr><th>專案 Project</th><th>Phase 階段</th><th>EVT</th><th>DVT</th><th>PM</th><th>RF</th><th>EMC</th><th>Energy</th><th>Safety</th><th>GMA</th><th>CM</th></tr>';
   document.getElementById('t2tableHead').innerHTML=thead;
   let tbody='';
   data.forEach(proj=>{
     const hl=isHighlighted(proj);
-    tbody+=`<tr class="${hl?'highlight':''}" style="opacity:${hl?1:0.4}"><td><strong>${proj.name}</strong></td><td>${proj.phase}</td><td>${proj.pm}</td><td>${proj.rf}</td><td>${proj.emc}</td><td>${proj.energy}</td><td>${proj.safety}</td><td>${proj.gma}</td><td>${proj.cm}</td></tr>`;
+    const sch=SCHEDULES[proj.name]||{};
+    const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
+    const evtInRange=rangeOverlaps(evtR,mr.start,mr.end);
+    const dvtInRange=rangeOverlaps(dvtR,mr.start,mr.end);
+    const evtBadge=evtInRange?'<span style="background:#fef2f2;color:#dc2626;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:600">EVT</span>':'<span style="color:#cbd5e1;font-size:10px">—</span>';
+    const dvtBadge=dvtInRange?'<span style="background:#fffbeb;color:#f59e0b;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:600">DVT</span>':'<span style="color:#cbd5e1;font-size:10px">—</span>';
+    tbody+=`<tr class="${hl?'highlight':''}" style="opacity:${hl?1:0.4}"><td><strong>${proj.name}</strong></td><td>${proj.phase}</td><td>${evtBadge}</td><td>${dvtBadge}</td><td>${proj.pm}</td><td>${proj.rf}</td><td>${proj.emc}</td><td>${proj.energy}</td><td>${proj.safety}</td><td>${proj.gma}</td><td>${proj.cm}</td></tr>`;
   });
   document.getElementById('t2tableBody').innerHTML=tbody;
-  // Summary
+
+  // Summary counts
   const anyFilter=Object.values(selectedFilters).some(s=>s.size>0);
-  const activeCount=anyFilter?data.filter(p=>isHighlighted(p)).length:data.length;
+  const filteredProjects=anyFilter?data.filter(p=>isHighlighted(p)):data;
+  const activeCount=filteredProjects.length;
   const cls=activeCount>15?'high':activeCount>8?'warn':'';
   document.getElementById('t2loadingSummary').innerHTML=anyFilter?`<span class="t2-loading-badge ${cls}">${activeCount} 專案 projects</span>`:'';
 
-  // EVT/DVT phase counts for filtered projects
-  const filteredProjects=anyFilter?data.filter(p=>isHighlighted(p)):data;
+  // EVT/DVT phase counts in selected month range
   let evtCount=0,dvtCount=0,evtNames=[],dvtNames=[];
   filteredProjects.forEach(proj=>{
     const sch=SCHEDULES[proj.name]||{};
-    if(sch.evt&&sch.evt!=='N/A'&&sch.evt!=='TBD'){evtCount++;evtNames.push(proj.name);}
-    if(sch.dvt&&sch.dvt!=='N/A'&&sch.dvt!=='TBD'){dvtCount++;dvtNames.push(proj.name);}
+    const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
+    if(rangeOverlaps(evtR,mr.start,mr.end)){evtCount++;evtNames.push(proj.name);}
+    if(rangeOverlaps(dvtR,mr.start,mr.end)){dvtCount++;dvtNames.push(proj.name);}
   });
   const pcEl=document.getElementById('t2PhaseCounts');
+  pcEl.innerHTML=`<span style="background:#fef2f2;border:1px solid #fecaca;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#dc2626" title="${evtNames.join(', ')}">🔥 EVT: ${evtCount}</span><span style="background:#fffbeb;border:1px solid #fed7aa;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#f59e0b" title="${dvtNames.join(', ')}">🔥 DVT: ${dvtCount}</span>`;
+
+  // Loading weight calculation per person
+  const lwEl=document.getElementById('t2LoadingWeight');
   if(anyFilter){
-    pcEl.innerHTML=`<span style="background:#fef2f2;border:1px solid #fecaca;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#dc2626" title="${evtNames.join(', ')}">🔥 EVT: ${evtCount}</span><span style="background:#fffbeb;border:1px solid #fed7aa;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#f59e0b" title="${dvtNames.join(', ')}">🔥 DVT: ${dvtCount}</span>`;
+    // Collect selected people and their roles
+    const personLoading={};
+    for(const role of ROLES){
+      if(!selectedFilters[role]||!selectedFilters[role].size)continue;
+      const weight=ROLE_WEIGHTS[role]||0;
+      selectedFilters[role].forEach(person=>{
+        if(!personLoading[person])personLoading[person]={total:0,evtLoad:0,dvtLoad:0,projects:[],roles:[]};
+        // Count projects in month range where this person is assigned this role
+        filteredProjects.forEach(proj=>{
+          const val=(proj[role]||'').split(',').map(s=>s.trim());
+          if(!val.includes(person))return;
+          const sch=SCHEDULES[proj.name]||{};
+          const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
+          const inEvt=rangeOverlaps(evtR,mr.start,mr.end);
+          const inDvt=rangeOverlaps(dvtR,mr.start,mr.end);
+          if(inEvt||inDvt){
+            if(!personLoading[person].projects.includes(proj.name))personLoading[person].projects.push(proj.name);
+            if(!personLoading[person].roles.includes(ROLE_LABELS[role]))personLoading[person].roles.push(ROLE_LABELS[role]);
+            if(inEvt){personLoading[person].evtLoad+=weight;personLoading[person].total+=weight;}
+            if(inDvt){personLoading[person].dvtLoad+=weight;personLoading[person].total+=weight;}
+          }
+        });
+      });
+    }
+    if(Object.keys(personLoading).length>0){
+      let lhtml='<div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:8px">📊 人員負載比重 Loading Weight (PM:0.3 | RF:0.2 | Safety:0.2 | EMC:0.1 | Energy:0.1 | GMA:0.1)</div>';
+      lhtml+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f8fafc"><th style="padding:5px 8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">人員 Person</th><th style="padding:5px 8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">角色 Role</th><th style="padding:5px 8px;text-align:center;color:#dc2626;border-bottom:1px solid #e2e8f0">EVT 負載</th><th style="padding:5px 8px;text-align:center;color:#f59e0b;border-bottom:1px solid #e2e8f0">DVT 負載</th><th style="padding:5px 8px;text-align:center;color:#1e293b;border-bottom:1px solid #e2e8f0">總負載 Total</th><th style="padding:5px 8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">案件 Projects</th></tr></thead><tbody>';
+      const sorted=Object.entries(personLoading).sort((a,b)=>b[1].total-a[1].total);
+      sorted.forEach(([name,info])=>{
+        if(info.total===0)return;
+        const barPct=Math.min(100,info.total*100);
+        const barColor=info.total>1.5?'#dc2626':info.total>0.8?'#f59e0b':'#16a34a';
+        lhtml+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-weight:600">${name}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#64748b">${info.roles.join(', ')}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:600">${info.evtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#f59e0b;font-weight:600">${info.dvtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center"><div style="display:flex;align-items:center;gap:6px;justify-content:center"><span style="font-weight:700;color:${barColor}">${info.total.toFixed(1)}</span><div style="width:60px;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:${barPct}%;height:100%;background:${barColor};border-radius:4px"></div></div></div></td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#475569">${info.projects.join(', ')}</td></tr>`;
+      });
+      lhtml+='</tbody></table>';
+      lwEl.innerHTML=lhtml;
+      lwEl.style.display='block';
+    } else {
+      lwEl.style.display='none';
+    }
   } else {
-    pcEl.innerHTML='';
+    lwEl.style.display='none';
   }
 }
+initT2MonthSelectors();
 buildFilters();render();
 })();
 </script>
