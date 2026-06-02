@@ -654,6 +654,7 @@ function buildFilters(){
   });
 }
 function t2toggle(cb){if(cb.checked)selectedPeople.add(cb.value);else selectedPeople.delete(cb.value);render();}
+window.t2toggle=t2toggle;
 window.t2clearAll=function(){selectedPeople.clear();document.querySelectorAll('#t2filters input[type=checkbox]').forEach(c=>c.checked=false);render();};
 function projMatchesPeople(proj){
   if(selectedPeople.size===0)return true;
