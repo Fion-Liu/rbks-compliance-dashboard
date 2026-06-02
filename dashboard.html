@@ -706,19 +706,25 @@ function render(){
   const lwEl=document.getElementById('t2LoadingWeight');
   if(anyFilter){
     const pL={};
-    selectedPeople.forEach(person=>{pL[person]={total:0,evtLoad:0,dvtLoad:0,details:[]};
-      data.forEach(proj=>{const sch=SCHEDULES[proj.name]||{};const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
-        const inE=rangeOverlaps(evtR,mr.start,mr.end),inD=rangeOverlaps(dvtR,mr.start,mr.end);
-        if(!inE&&!inD)return;let pw=0;const rl=[];
+    selectedPeople.forEach(person=>{pL[person]={total:0,evtLoad:0,dvtLoad:0,details:[],allProjects:[]};
+      data.forEach(proj=>{
+        let pw=0;const rl=[];
         ['pm','rf','emc','energy','safety','gma'].forEach(role=>{if((proj[role]||'').split(',').map(s=>s.trim()).includes(person)){pw+=ROLE_WEIGHTS[role]||0;rl.push(ROLE_LABELS[role]);}});
-        if(pw>0){pL[person].details.push(`${proj.name}(${rl.join('+')})`);if(inE){pL[person].evtLoad+=pw;}if(inD){pL[person].dvtLoad+=pw;}pL[person].total+=(inE?pw:0)+(inD?pw:0);}
+        if(pw>0){
+          pL[person].allProjects.push(`${proj.name}(${rl.join('+')})`);
+          const sch=SCHEDULES[proj.name]||{};const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
+          const inE=rangeOverlaps(evtR,mr.start,mr.end),inD=rangeOverlaps(dvtR,mr.start,mr.end);
+          if(inE){pL[person].evtLoad+=pw;pL[person].total+=pw;pL[person].details.push(`${proj.name}(EVT:${rl.join('+')})`);}
+          if(inD){pL[person].dvtLoad+=pw;pL[person].total+=pw;pL[person].details.push(`${proj.name}(DVT:${rl.join('+')})`);}
+        }
       });
     });
     let lh='<div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:8px">📊 負載比重 Loading Weight <span style="font-weight:400;color:#64748b;font-size:10px">(PM:0.3 | RF:0.2 | Safety:0.2 | EMC:0.1 | Energy:0.1 | GMA:0.1)</span></div>';
-    lh+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f8fafc"><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b">人員</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#dc2626">EVT</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#f59e0b">DVT</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#1e293b">Total</th><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b">案件(角色)</th></tr></thead><tbody>';
+    lh+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f8fafc"><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b">人員</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#dc2626">EVT 負載</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#f59e0b">DVT 負載</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#1e293b">總負載 Total</th><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b">全部負責案件(角色) All Projects</th></tr></thead><tbody>';
     Object.entries(pL).sort((a,b)=>b[1].total-a[1].total).forEach(([n,i])=>{
       const bc=i.total>2?'#dc2626':i.total>1?'#f59e0b':'#16a34a';
-      lh+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-weight:600">${n}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:600">${i.evtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#f59e0b;font-weight:600">${i.dvtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center"><span style="font-weight:700;color:${bc}">${i.total.toFixed(1)}</span></td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#475569">${i.details.join(', ')}</td></tr>`;
+      const projDisplay=i.allProjects.length>0?i.allProjects.join(', '):'<span style="color:#94a3b8">無負責案件</span>';
+      lh+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-weight:600">${n}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:600">${i.evtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#f59e0b;font-weight:600">${i.dvtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center"><span style="font-weight:700;color:${bc}">${i.total.toFixed(1)}</span></td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#475569">${projDisplay}</td></tr>`;
     });lh+='</tbody></table>';lwEl.innerHTML=lh;lwEl.style.display='block';
   }else{lwEl.style.display='none';}
 }
