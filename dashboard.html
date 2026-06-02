@@ -590,11 +590,9 @@ const PERSONNEL=[{"name":"Dunlin","phase":"Phase 1.1","pm":"David Hung, Maggie W
 {"name":"Project Ferdinand","phase":"Phase 5","pm":"Yoyo Chen","rf":"N/A","emc":"N/A","energy":"N/A","safety":"N/A","gma":"","cm":""},{"name":"Bristlecone","phase":"Phase 0","pm":"Kevin Chang, Maggie Wu","rf":"Kevin Chang","emc":"Jay Chen","energy":"Jay Chen","safety":"Rally Chen","gma":"Yoyo Chen","cm":"Leedarson"},{"name":"Unicorn","phase":"Phase 1","pm":"Gino Liao","rf":"David Hung","emc":"Jay Chen","energy":"Jay Chen","safety":"Slash Chang","gma":"","cm":""}];
 const SCHEDULES={"Cinco":{"evt":"12/05–12/22/25","dvt":"12/05–12/22/25","ok2mp":"2026-01-30"},"Flan":{"evt":"11/30/25–01/22/26","dvt":"02/05–03/06/26","ok2mp":"2026-03-19"},"Freesia":{"evt":"12/24/25–01/15/26","dvt":"02/04–03/06/26","ok2mp":"2026-03-20"},"Lionfish":{"evt":"12/09/25–02/13/26","dvt":"03/02–03/30/26","ok2mp":"2026-04-02"},"Chromis":{"evt":"12/09/25–02/11/26","dvt":"03/02–03/30/26","ok2mp":"2026-04-02"},"Osprey":{"evt":"12/03/25–02/11/26","dvt":"02/26–04/02/26","ok2mp":"2026-04-02"},"Orchid":{"evt":"10/20/25–01/22/26","dvt":"03/06–04/02/26","ok2mp":"2026-03-20"},"Scorpius":{"dvt":"01/19–02/26/26","ok2mp":"2026-03-09"},"Moonlight_r24":{"dvt":"01/05–01/09/26","ok2mp":"2026-01-09"},"Valkyrie":{"evt":"06/23–07/24/26","ok2mp":"2026-12-15"},"Zorilla":{"ok2mp":"Shipped"},"Forsythia":{"dvt":"01/29–02/25/26","ok2mp":"2026-02-13"},"Sombrus":{"dvt":"02/02–03/20/26"},"Phantom_r24":{"dvt":"01/05–01/09/26"},"Prismal":{"dvt":"12/22/25–01/30/26"},"Monte":{"ok2mp":"2026-05-20"},"Huron":{"evt":"12/23–12/24/25","ok2mp":"2026-05-27"},"Petunia":{"ok2mp":"2026-05-06"},"Newport":{"evt":"~03–05/2026","dvt":"05/06–05/13/26","ok2mp":"~2026-05-20"},"PoE++":{"evt":"12/08/25–01/06/26"},"Mela":{"evt":"~07/2026"},"Coralfish":{"dvt":"~05/08/26"},"Kharan":{"ok2mp":"2026-07-09"},"White Rock":{"evt":"04/07–05/12/26","dvt":"05/19–05/25/26","ok2mp":"2026-05-25"},"Jewelfish":{"dvt":"~05/2026"},"Hexa":{"ok2mp":"2026-03-16"},"Mount Wilson":{"evt":"02/03–04/14/26","dvt":"04/14–05/11/26","ok2mp":"2026-05-11"},"Vireo":{"dvt":"~05/2026"},"Blenny":{"evt":"03/27–06/30/26","dvt":"07/21–08/24/26","ok2mp":"2026-09-23"},"Cristo":{"evt":"~04/28/2026"},"Pencilfish":{"evt":"~06–07/2026"},"Dunlin":{"evt":"~04/07–06/09/26"},"Snapper":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Opaleye":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Moray":{"evt":"~06/26","dvt":"~09/15","ok2mp":"2026-09-18"},"Tanami":{"evt":"~05/15/26","dvt":"~08/14/26","ok2mp":"2026-10-12"},"Unicorn":{},"Altus":{},"Black Rock":{"evt":"05/26–07/01/26","dvt":"09/02–09/29/26","ok2mp":"2026-09-29"},"Pansy":{"ok2mp":"2026-11-25"},"Poppy":{"ok2mp":"2026-11-25"},"Hawkfish":{},"Banjar":{"evt":"~Jul 2026","dvt":"08/14/26","ok2mp":"2026-09-18"},"Tabernas":{},"Nocturne":{},"Fossa":{}};
 const ROLES=['pm','rf','emc','energy','safety','gma','cm'];
-const ROLE_LABELS={pm:'PM 專案經理',rf:'RF 射頻',emc:'EMC 電磁相容',energy:'Energy 能效',safety:'Safety 安全',gma:'GMA 全球市場',cm:'CM 製造商'};
+const ROLE_LABELS={pm:'PM',rf:'RF',emc:'EMC',energy:'Energy',safety:'Safety',gma:'GMA',cm:'CM'};
 const ROLE_WEIGHTS={pm:0.3,rf:0.2,emc:0.1,energy:0.1,safety:0.2,gma:0.1};
 const START=new Date(2025,10,1),END=new Date(2027,5,30);
-const TOTAL_DAYS=(END-START)/(86400000);
-function dateToPos(d){return Math.max(0,Math.min(100,((d-START)/(86400000))/TOTAL_DAYS*100));}
 function parseRange(s){
   if(!s||s==='N/A'||s==='TBD'||s==='Shipped')return null;
   s=s.replace(/~/g,'').trim();
@@ -615,218 +613,116 @@ function parsePoint(s){
   if(m)return new Date(parseInt(m[1]),parseInt(m[2])-1,parseInt(m[3]));
   return null;
 }
-function getPeople(role){
+function rangeOverlaps(r,rs,re){if(!r)return false;return r[0]<=re&&r[1]>=rs;}
+function getAllPeople(){
   const set=new Set();
-  PERSONNEL.forEach(p=>{
+  PERSONNEL.forEach(p=>{['pm','rf','emc','energy','safety','gma'].forEach(role=>{
     const v=p[role];if(!v||v==='N/A'||v==='TBD')return;
-    v.split(',').forEach(n=>{const t=n.trim();if(t&&t!=='N/A'&&t!=='TBD'&&t!=='Lab 126')set.add(t);});
-  });
+    v.split(',').forEach(n=>{const t=n.trim();if(t&&t!=='N/A'&&t!=='TBD'&&t!=='Lab 126'&&t.length>1)set.add(t);});
+  });});
   return [...set].sort();
 }
-// Month selector for Tab2
-function initT2MonthSelectors(){
-  const fromSel=document.getElementById('t2MonthFrom');
-  const toSel=document.getElementById('t2MonthTo');
-  const months=[];
-  for(let y=2025;y<=2027;y++){
-    const startM=(y===2025)?10:0;
-    const endM=(y===2027)?5:11;
-    for(let m=startM;m<=endM;m++){
-      const label=new Date(y,m,1).toLocaleDateString('en',{month:'short',year:'numeric'});
-      months.push({y,m,label});
-    }
-  }
-  months.forEach((item,i)=>{
-    fromSel.appendChild(new Option(item.label,i));
-    toSel.appendChild(new Option(item.label,i));
+function getPersonRoles(person,proj){
+  const r=[];
+  ['pm','rf','emc','energy','safety','gma'].forEach(role=>{
+    if((proj[role]||'').split(',').map(s=>s.trim()).includes(person))r.push(ROLE_LABELS[role]);
   });
-  // Default: all months (full range)
-  fromSel.value=0;
-  toSel.value=months.length-1;
-  window._t2Months=months;
+  return r;
+}
+function initT2MonthSelectors(){
+  const fromSel=document.getElementById('t2MonthFrom'),toSel=document.getElementById('t2MonthTo');
+  const months=[];
+  for(let y=2025;y<=2027;y++){for(let m=(y===2025?10:0);m<=(y===2027?5:11);m++){
+    months.push({y,m,label:new Date(y,m,1).toLocaleDateString('en',{month:'short',year:'numeric'})});
+  }}
+  months.forEach((item,i)=>{fromSel.appendChild(new Option(item.label,i));toSel.appendChild(new Option(item.label,i));});
+  fromSel.value=0;toSel.value=months.length-1;window._t2Months=months;
 }
 function getT2MonthRange(){
-  const months=window._t2Months;
-  if(!months)return{start:START,end:END};
-  const fromIdx=parseInt(document.getElementById('t2MonthFrom').value);
-  const toIdx=parseInt(document.getElementById('t2MonthTo').value);
-  return{
-    start:new Date(months[fromIdx].y,months[fromIdx].m,1),
-    end:new Date(months[toIdx].y,months[toIdx].m+1,0)
-  };
+  const months=window._t2Months;if(!months)return{start:START,end:END};
+  const fi=parseInt(document.getElementById('t2MonthFrom').value),ti=parseInt(document.getElementById('t2MonthTo').value);
+  return{start:new Date(months[fi].y,months[fi].m,1),end:new Date(months[ti].y,months[ti].m+1,0)};
 }
-function rangeOverlaps(r,rangeStart,rangeEnd){
-  if(!r)return false;
-  return r[0]<=rangeEnd&&r[1]>=rangeStart;
-}
-
-let selectedFilters={};
+let selectedPeople=new Set();
 function buildFilters(){
-  const container=document.getElementById('t2filters');
-  container.innerHTML='';
-  ROLES.forEach(role=>{
-    const people=getPeople(role);if(!people.length)return;
-    selectedFilters[role]=selectedFilters[role]||new Set();
-    const sec=document.createElement('div');sec.className='filter-section';
-    sec.innerHTML=`<div class="filter-header" onclick="this.querySelector('.arrow').classList.toggle('open');this.nextElementSibling.classList.toggle('open')"><span>${ROLE_LABELS[role]} (${people.length})</span><span class="arrow">▶</span></div><div class="filter-body">${people.map(p=>`<label><input type="checkbox" data-role="${role}" value="${p}" ${selectedFilters[role].has(p)?'checked':''} onchange="t2toggle(this)">${p}</label>`).join('')}</div>`;
-    container.appendChild(sec);
+  const container=document.getElementById('t2filters');container.innerHTML='';
+  getAllPeople().forEach(person=>{
+    const lbl=document.createElement('label');
+    lbl.style.cssText='display:block;font-size:11px;padding:3px 4px;cursor:pointer;color:#475569;border-radius:3px';
+    lbl.innerHTML=`<input type="checkbox" value="${person}" ${selectedPeople.has(person)?'checked':''} onchange="t2toggle(this)" style="margin-right:6px;accent-color:#2563eb">${person}`;
+    container.appendChild(lbl);
   });
 }
-function t2toggle(cb){
-  const role=cb.dataset.role,val=cb.value;
-  if(cb.checked)selectedFilters[role].add(val);else selectedFilters[role].delete(val);
-  render();
-}
-window.t2clearAll=function(){
-  Object.values(selectedFilters).forEach(s=>s.clear());
-  document.querySelectorAll('#t2filters input[type=checkbox]').forEach(c=>c.checked=false);
-  render();
-};
-function isHighlighted(proj){
-  const anyFilter=Object.values(selectedFilters).some(s=>s.size>0);
-  if(!anyFilter)return true;
-  for(const role of ROLES){
-    if(!selectedFilters[role]||!selectedFilters[role].size)continue;
-    const val=proj[role]||'';
-    const people=val.split(',').map(s=>s.trim());
-    if(people.some(p=>selectedFilters[role].has(p)))return true;
+function t2toggle(cb){if(cb.checked)selectedPeople.add(cb.value);else selectedPeople.delete(cb.value);render();}
+window.t2clearAll=function(){selectedPeople.clear();document.querySelectorAll('#t2filters input[type=checkbox]').forEach(c=>c.checked=false);render();};
+function projMatchesPeople(proj){
+  if(selectedPeople.size===0)return true;
+  for(const role of ['pm','rf','emc','energy','safety','gma']){
+    if((proj[role]||'').split(',').map(s=>s.trim()).some(p=>selectedPeople.has(p)))return true;
   }
   return false;
 }
 function render(){
   const months=[];
-  for(let d=new Date(START);d<=END;d.setMonth(d.getMonth()+1)){
-    months.push(new Date(d));
-  }
-  const data=PERSONNEL.filter(p=>!p.pm.includes('Lab 126'));
+  for(let d=new Date(START);d<=END;d.setMonth(d.getMonth()+1))months.push(new Date(d));
+  const allData=PERSONNEL.filter(p=>!p.pm.includes('Lab 126'));
   const mr=getT2MonthRange();
-
+  const anyFilter=selectedPeople.size>0;
+  const data=anyFilter?allData.filter(p=>projMatchesPeople(p)):allData;
   // Gantt header
   let hhtml='<tr><th class="t2-gantt-name">專案 Project</th>';
-  months.forEach(m=>{const lbl=m.toLocaleDateString('en',{month:'short',year:'2-digit'});hhtml+=`<th style="min-width:50px;text-align:center;font-size:10px">${lbl}</th>`;});
-  hhtml+='</tr>';
-  document.getElementById('t2ganttHead').innerHTML=hhtml;
-
-  // Gantt body
+  months.forEach(m=>{hhtml+=`<th style="min-width:50px;text-align:center;font-size:10px">${m.toLocaleDateString('en',{month:'short',year:'2-digit'})}</th>`;});
+  hhtml+='</tr>';document.getElementById('t2ganttHead').innerHTML=hhtml;
+  // Gantt body — only filtered projects
   let bhtml='';
   data.forEach(proj=>{
-    const hl=isHighlighted(proj);
     const sch=SCHEDULES[proj.name]||{};
     const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt),mpP=parsePoint(sch.ok2mp);
-    const dim=hl?'':'dimmed';
-    bhtml+=`<tr><td class="t2-gantt-name" style="opacity:${hl?1:0.3}">${proj.name}</td>`;
-    months.forEach((m,i)=>{
-      const mStart=m,mEnd=new Date(m.getFullYear(),m.getMonth()+1,0);
-      let cell='';
-      if(evtR){
-        const[s,e]=evtR;
-        if(s<=mEnd&&e>=mStart){
-          const l=Math.max(0,(s-mStart)/(mEnd-mStart)*100);
-          const r=Math.min(100,(e-mStart)/(mEnd-mStart)*100);
-          cell+=`<div class="t2-bar evt ${dim}" style="left:${l}%;width:${Math.max(4,r-l)}%"></div>`;
-        }
-      }
-      if(dvtR){
-        const[s,e]=dvtR;
-        if(s<=mEnd&&e>=mStart){
-          const l=Math.max(0,(s-mStart)/(mEnd-mStart)*100);
-          const r=Math.min(100,(e-mStart)/(mEnd-mStart)*100);
-          cell+=`<div class="t2-bar dvt ${dim}" style="left:${l}%;width:${Math.max(4,r-l)}%"></div>`;
-        }
-      }
-      if(mpP&&mpP>=mStart&&mpP<=mEnd){
-        const l=(mpP-mStart)/(mEnd-mStart)*100;
-        cell+=`<div class="t2-diamond ${dim}" style="left:${l}%"></div>`;
-      }
+    bhtml+=`<tr><td class="t2-gantt-name">${proj.name}</td>`;
+    months.forEach(m=>{
+      const mS=m,mE=new Date(m.getFullYear(),m.getMonth()+1,0);let cell='';
+      if(evtR&&evtR[0]<=mE&&evtR[1]>=mS){const l=Math.max(0,(evtR[0]-mS)/(mE-mS)*100),r=Math.min(100,(evtR[1]-mS)/(mE-mS)*100);cell+=`<div class="t2-bar evt" style="left:${l}%;width:${Math.max(4,r-l)}%"></div>`;}
+      if(dvtR&&dvtR[0]<=mE&&dvtR[1]>=mS){const l=Math.max(0,(dvtR[0]-mS)/(mE-mS)*100),r=Math.min(100,(dvtR[1]-mS)/(mE-mS)*100);cell+=`<div class="t2-bar dvt" style="left:${l}%;width:${Math.max(4,r-l)}%"></div>`;}
+      if(mpP&&mpP>=mS&&mpP<=mE){cell+=`<div class="t2-diamond" style="left:${(mpP-mS)/(mE-mS)*100}%"></div>`;}
       bhtml+=`<td class="t2-gantt-bar-cell">${cell}</td>`;
-    });
-    bhtml+='</tr>';
-  });
-  document.getElementById('t2ganttBody').innerHTML=bhtml;
-
-  // Data table with EVT/DVT status
-  let thead='<tr><th>專案 Project</th><th>Phase 階段</th><th>EVT</th><th>DVT</th><th>PM</th><th>RF</th><th>EMC</th><th>Energy</th><th>Safety</th><th>GMA</th><th>CM</th></tr>';
-  document.getElementById('t2tableHead').innerHTML=thead;
+    });bhtml+='</tr>';
+  });document.getElementById('t2ganttBody').innerHTML=bhtml;
+  // Data table
+  document.getElementById('t2tableHead').innerHTML='<tr><th>專案</th><th>Phase</th><th>EVT</th><th>DVT</th><th>PM</th><th>RF</th><th>EMC</th><th>Energy</th><th>Safety</th><th>GMA</th><th>CM</th></tr>';
   let tbody='';
   data.forEach(proj=>{
-    const hl=isHighlighted(proj);
-    const sch=SCHEDULES[proj.name]||{};
-    const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
-    const evtInRange=rangeOverlaps(evtR,mr.start,mr.end);
-    const dvtInRange=rangeOverlaps(dvtR,mr.start,mr.end);
-    const evtBadge=evtInRange?'<span style="background:#fef2f2;color:#dc2626;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:600">EVT</span>':'<span style="color:#cbd5e1;font-size:10px">—</span>';
-    const dvtBadge=dvtInRange?'<span style="background:#fffbeb;color:#f59e0b;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:600">DVT</span>':'<span style="color:#cbd5e1;font-size:10px">—</span>';
-    tbody+=`<tr class="${hl?'highlight':''}" style="opacity:${hl?1:0.4}"><td><strong>${proj.name}</strong></td><td>${proj.phase}</td><td>${evtBadge}</td><td>${dvtBadge}</td><td>${proj.pm}</td><td>${proj.rf}</td><td>${proj.emc}</td><td>${proj.energy}</td><td>${proj.safety}</td><td>${proj.gma}</td><td>${proj.cm}</td></tr>`;
-  });
-  document.getElementById('t2tableBody').innerHTML=tbody;
-
-  // Summary counts
-  const anyFilter=Object.values(selectedFilters).some(s=>s.size>0);
-  const filteredProjects=anyFilter?data.filter(p=>isHighlighted(p)):data;
-  const activeCount=filteredProjects.length;
-  const cls=activeCount>15?'high':activeCount>8?'warn':'';
-  document.getElementById('t2loadingSummary').innerHTML=anyFilter?`<span class="t2-loading-badge ${cls}">${activeCount} 專案 projects</span>`:'';
-
-  // EVT/DVT phase counts in selected month range
-  let evtCount=0,dvtCount=0,evtNames=[],dvtNames=[];
-  filteredProjects.forEach(proj=>{
-    const sch=SCHEDULES[proj.name]||{};
-    const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
-    if(rangeOverlaps(evtR,mr.start,mr.end)){evtCount++;evtNames.push(proj.name);}
-    if(rangeOverlaps(dvtR,mr.start,mr.end)){dvtCount++;dvtNames.push(proj.name);}
-  });
-  const pcEl=document.getElementById('t2PhaseCounts');
-  pcEl.innerHTML=`<span style="background:#fef2f2;border:1px solid #fecaca;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#dc2626" title="${evtNames.join(', ')}">🔥 EVT: ${evtCount}</span><span style="background:#fffbeb;border:1px solid #fed7aa;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#f59e0b" title="${dvtNames.join(', ')}">🔥 DVT: ${dvtCount}</span>`;
-
-  // Loading weight calculation per person
+    const sch=SCHEDULES[proj.name]||{};const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
+    const eB=rangeOverlaps(evtR,mr.start,mr.end)?'<span style="background:#fef2f2;color:#dc2626;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:600">EVT</span>':'—';
+    const dB=rangeOverlaps(dvtR,mr.start,mr.end)?'<span style="background:#fffbeb;color:#f59e0b;padding:1px 5px;border-radius:8px;font-size:10px;font-weight:600">DVT</span>':'—';
+    tbody+=`<tr class="highlight"><td><strong>${proj.name}</strong></td><td>${proj.phase}</td><td>${eB}</td><td>${dB}</td><td>${proj.pm}</td><td>${proj.rf}</td><td>${proj.emc}</td><td>${proj.energy}</td><td>${proj.safety}</td><td>${proj.gma}</td><td>${proj.cm}</td></tr>`;
+  });document.getElementById('t2tableBody').innerHTML=tbody;
+  // Summary
+  document.getElementById('t2loadingSummary').innerHTML=anyFilter?`<span class="t2-loading-badge ${data.length>15?'high':data.length>8?'warn':''}">${data.length} 專案</span>`:'';
+  // EVT/DVT counts
+  let ec=0,dc=0,en=[],dn=[];
+  data.forEach(p=>{const s=SCHEDULES[p.name]||{};if(rangeOverlaps(parseRange(s.evt),mr.start,mr.end)){ec++;en.push(p.name);}if(rangeOverlaps(parseRange(s.dvt),mr.start,mr.end)){dc++;dn.push(p.name);}});
+  document.getElementById('t2PhaseCounts').innerHTML=`<span style="background:#fef2f2;border:1px solid #fecaca;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#dc2626" title="${en.join(', ')}">🔥 EVT: ${ec}</span><span style="background:#fffbeb;border:1px solid #fed7aa;padding:3px 10px;border-radius:12px;font-size:11px;font-weight:600;color:#f59e0b" title="${dn.join(', ')}">🔥 DVT: ${dc}</span>`;
+  // Loading weight
   const lwEl=document.getElementById('t2LoadingWeight');
   if(anyFilter){
-    // Collect selected people and their roles
-    const personLoading={};
-    for(const role of ROLES){
-      if(!selectedFilters[role]||!selectedFilters[role].size)continue;
-      const weight=ROLE_WEIGHTS[role]||0;
-      selectedFilters[role].forEach(person=>{
-        if(!personLoading[person])personLoading[person]={total:0,evtLoad:0,dvtLoad:0,projects:[],roles:[]};
-        // Count projects in month range where this person is assigned this role
-        filteredProjects.forEach(proj=>{
-          const val=(proj[role]||'').split(',').map(s=>s.trim());
-          if(!val.includes(person))return;
-          const sch=SCHEDULES[proj.name]||{};
-          const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
-          const inEvt=rangeOverlaps(evtR,mr.start,mr.end);
-          const inDvt=rangeOverlaps(dvtR,mr.start,mr.end);
-          if(inEvt||inDvt){
-            if(!personLoading[person].projects.includes(proj.name))personLoading[person].projects.push(proj.name);
-            if(!personLoading[person].roles.includes(ROLE_LABELS[role]))personLoading[person].roles.push(ROLE_LABELS[role]);
-            if(inEvt){personLoading[person].evtLoad+=weight;personLoading[person].total+=weight;}
-            if(inDvt){personLoading[person].dvtLoad+=weight;personLoading[person].total+=weight;}
-          }
-        });
+    const pL={};
+    selectedPeople.forEach(person=>{pL[person]={total:0,evtLoad:0,dvtLoad:0,details:[]};
+      data.forEach(proj=>{const sch=SCHEDULES[proj.name]||{};const evtR=parseRange(sch.evt),dvtR=parseRange(sch.dvt);
+        const inE=rangeOverlaps(evtR,mr.start,mr.end),inD=rangeOverlaps(dvtR,mr.start,mr.end);
+        if(!inE&&!inD)return;let pw=0;const rl=[];
+        ['pm','rf','emc','energy','safety','gma'].forEach(role=>{if((proj[role]||'').split(',').map(s=>s.trim()).includes(person)){pw+=ROLE_WEIGHTS[role]||0;rl.push(ROLE_LABELS[role]);}});
+        if(pw>0){pL[person].details.push(`${proj.name}(${rl.join('+')})`);if(inE){pL[person].evtLoad+=pw;}if(inD){pL[person].dvtLoad+=pw;}pL[person].total+=(inE?pw:0)+(inD?pw:0);}
       });
-    }
-    if(Object.keys(personLoading).length>0){
-      let lhtml='<div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:8px">📊 人員負載比重 Loading Weight (PM:0.3 | RF:0.2 | Safety:0.2 | EMC:0.1 | Energy:0.1 | GMA:0.1)</div>';
-      lhtml+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f8fafc"><th style="padding:5px 8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">人員 Person</th><th style="padding:5px 8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">角色 Role</th><th style="padding:5px 8px;text-align:center;color:#dc2626;border-bottom:1px solid #e2e8f0">EVT 負載</th><th style="padding:5px 8px;text-align:center;color:#f59e0b;border-bottom:1px solid #e2e8f0">DVT 負載</th><th style="padding:5px 8px;text-align:center;color:#1e293b;border-bottom:1px solid #e2e8f0">總負載 Total</th><th style="padding:5px 8px;text-align:left;color:#64748b;border-bottom:1px solid #e2e8f0">案件 Projects</th></tr></thead><tbody>';
-      const sorted=Object.entries(personLoading).sort((a,b)=>b[1].total-a[1].total);
-      sorted.forEach(([name,info])=>{
-        if(info.total===0)return;
-        const barPct=Math.min(100,info.total*100);
-        const barColor=info.total>1.5?'#dc2626':info.total>0.8?'#f59e0b':'#16a34a';
-        lhtml+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-weight:600">${name}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#64748b">${info.roles.join(', ')}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:600">${info.evtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#f59e0b;font-weight:600">${info.dvtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center"><div style="display:flex;align-items:center;gap:6px;justify-content:center"><span style="font-weight:700;color:${barColor}">${info.total.toFixed(1)}</span><div style="width:60px;height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden"><div style="width:${barPct}%;height:100%;background:${barColor};border-radius:4px"></div></div></div></td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#475569">${info.projects.join(', ')}</td></tr>`;
-      });
-      lhtml+='</tbody></table>';
-      lwEl.innerHTML=lhtml;
-      lwEl.style.display='block';
-    } else {
-      lwEl.style.display='none';
-    }
-  } else {
-    lwEl.style.display='none';
-  }
+    });
+    let lh='<div style="font-size:12px;font-weight:600;color:#1e293b;margin-bottom:8px">📊 負載比重 Loading Weight <span style="font-weight:400;color:#64748b;font-size:10px">(PM:0.3 | RF:0.2 | Safety:0.2 | EMC:0.1 | Energy:0.1 | GMA:0.1)</span></div>';
+    lh+='<table style="width:100%;border-collapse:collapse;font-size:11px"><thead><tr style="background:#f8fafc"><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b">人員</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#dc2626">EVT</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#f59e0b">DVT</th><th style="padding:5px 8px;text-align:center;border-bottom:1px solid #e2e8f0;color:#1e293b">Total</th><th style="padding:5px 8px;text-align:left;border-bottom:1px solid #e2e8f0;color:#64748b">案件(角色)</th></tr></thead><tbody>';
+    Object.entries(pL).sort((a,b)=>b[1].total-a[1].total).forEach(([n,i])=>{
+      const bc=i.total>2?'#dc2626':i.total>1?'#f59e0b':'#16a34a';
+      lh+=`<tr><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-weight:600">${n}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#dc2626;font-weight:600">${i.evtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center;color:#f59e0b;font-weight:600">${i.dvtLoad.toFixed(1)}</td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;text-align:center"><span style="font-weight:700;color:${bc}">${i.total.toFixed(1)}</span></td><td style="padding:5px 8px;border-bottom:1px solid #f1f5f9;font-size:10px;color:#475569">${i.details.join(', ')}</td></tr>`;
+    });lh+='</tbody></table>';lwEl.innerHTML=lh;lwEl.style.display='block';
+  }else{lwEl.style.display='none';}
 }
-initT2MonthSelectors();
-buildFilters();render();
+initT2MonthSelectors();buildFilters();render();
 })();
 </script>
 </body>
