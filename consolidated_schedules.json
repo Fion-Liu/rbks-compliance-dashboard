@@ -1,0 +1,362 @@
+{
+  "Cinco": {
+    "evt": "12/05–12/22/25",
+    "dvt": "12/05–12/22/25",
+    "ok2mp": "2026-01-30",
+    "ship": "2026-02-06",
+    "announce": "2025-12-22",
+    "street": "TBD"
+  },
+  "Flan": {
+    "evt": "11/30/25–01/22/26",
+    "dvt": "02/05–03/06/26",
+    "ok2mp": "2026-03-19",
+    "ship": "2026-03-31",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Freesia": {
+    "evt": "12/24/25–01/15/26",
+    "dvt": "02/04–03/06/26",
+    "ok2mp": "2026-03-20",
+    "ship": "2026-04-24",
+    "announce": "2026-04-16",
+    "street": "TBD"
+  },
+  "Lionfish": {
+    "evt": "12/09/25–02/13/26",
+    "dvt": "03/02–03/30/26",
+    "ok2mp": "2026-04-02",
+    "ship": "2026-04-22",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Chromis": {
+    "evt": "12/09/25–02/11/26",
+    "dvt": "03/02–03/30/26",
+    "ok2mp": "2026-04-02",
+    "ship": "2026-04-22",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Osprey": {
+    "evt": "12/03/25–02/11/26",
+    "dvt": "02/26–04/02/26",
+    "ok2mp": "2026-04-02",
+    "ship": "2026-04-22",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Orchid": {
+    "evt": "10/20/25–01/22/26",
+    "dvt": "03/06–04/02/26",
+    "ok2mp": "2026-03-20",
+    "ship": "2026-04-02",
+    "announce": "2026-04-22",
+    "street": "2026-05-13"
+  },
+  "Scorpius": {
+    "evt": "N/A",
+    "dvt": "01/19–02/26/26",
+    "ok2mp": "2026-03-09",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Moonlight_r24": {
+    "evt": "N/A",
+    "dvt": "01/05–01/09/26",
+    "ok2mp": "2026-01-09",
+    "ship": "2026-01-14",
+    "announce": "2026-03-04",
+    "street": "TBD"
+  },
+  "Phantom_r24": {
+    "evt": "N/A",
+    "dvt": "01/05–01/09/26",
+    "ok2mp": "Shipped",
+    "ship": "2025-09-22",
+    "announce": "2026-01-16",
+    "street": "TBD"
+  },
+  "Zorilla": {
+    "evt": "TBD",
+    "dvt": "~Mar 2026",
+    "ok2mp": "Shipped",
+    "ship": "Shipped",
+    "announce": "TBD",
+    "street": "2026-03-04"
+  },
+  "Forsythia": {
+    "evt": "~01/2026",
+    "dvt": "01/29–02/25/26",
+    "ok2mp": "2026-02-13",
+    "ship": "Shipped",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Valkyrie": {
+    "evt": "06/23–07/24/26",
+    "dvt": "TBD",
+    "ok2mp": "2026-12-15",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Sombrus": {
+    "evt": "N/A",
+    "dvt": "02/02–03/20/26",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "2026-04-15",
+    "street": "TBD"
+  },
+  "Prismal": {
+    "evt": "N/A",
+    "dvt": "12/22/25–01/30/26",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "N/A",
+    "street": "TBD"
+  },
+  "Monte": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "2026-05-20",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Huron": {
+    "evt": "12/23–12/24/25",
+    "dvt": "~03/2026",
+    "ok2mp": "2026-05-27",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-07-22"
+  },
+  "Petunia": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "2026-05-06",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Newport": {
+    "evt": "~03–05/2026",
+    "dvt": "05/06–05/13/26",
+    "ok2mp": "~2026-05-20",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "PoE++": {
+    "evt": "12/08/25–01/06/26",
+    "dvt": "N/A",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "N/A",
+    "street": "TBD"
+  },
+  "Mela": {
+    "evt": "~07/2026",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Coralfish": {
+    "evt": "TBD",
+    "dvt": "~05/08/26",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Kharan": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "2026-07-09",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-08-05"
+  },
+  "White Rock": {
+    "evt": "04/07–05/12/26",
+    "dvt": "05/19–05/25/26",
+    "ok2mp": "2026-05-25",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Jewelfish": {
+    "evt": "TBD",
+    "dvt": "~05/2026",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Hexa": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "2026-03-16",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-07-08"
+  },
+  "Mount Wilson": {
+    "evt": "02/03–04/14/26",
+    "dvt": "04/14–05/11/26",
+    "ok2mp": "2026-05-11",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-06-01"
+  },
+  "Vireo": {
+    "evt": "TBD",
+    "dvt": "~05/2026",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Blenny": {
+    "evt": "03/27–06/30/26",
+    "dvt": "07/21–08/24/26",
+    "ok2mp": "2026-09-23",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-10-09"
+  },
+  "Tabernas": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Cristo": {
+    "evt": "~04/28/2026",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Pencilfish": {
+    "evt": "~06–07/2026",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Dunlin": {
+    "evt": "~04/07–06/09/26",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-10-07"
+  },
+  "Snapper": {
+    "evt": "~06/26",
+    "dvt": "~09/15",
+    "ok2mp": "2026-09-18",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Opaleye": {
+    "evt": "~06/26",
+    "dvt": "~09/15",
+    "ok2mp": "2026-09-18",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Moray": {
+    "evt": "~06/26",
+    "dvt": "~09/15",
+    "ok2mp": "2026-09-18",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Tanami": {
+    "evt": "~05/15/26",
+    "dvt": "~08/14/26",
+    "ok2mp": "2026-10-12",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-11-18"
+  },
+  "Unicorn": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "Q2 2027"
+  },
+  "Altus": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-10-13"
+  },
+  "Black Rock": {
+    "evt": "05/26–07/01/26",
+    "dvt": "09/02–09/29/26",
+    "ok2mp": "2026-09-29",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Pansy": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "2026-11-25",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Poppy": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "2026-11-25",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  },
+  "Hawkfish": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "2026-05-13"
+  },
+  "Banjar": {
+    "evt": "~Jul 2026",
+    "dvt": "08/14/26",
+    "ok2mp": "2026-09-18",
+    "ship": "TBD",
+    "announce": "2026-09-29",
+    "street": "2026-10-28"
+  },
+  "Loon": {
+    "evt": "TBD",
+    "dvt": "TBD",
+    "ok2mp": "TBD",
+    "ship": "TBD",
+    "announce": "TBD",
+    "street": "TBD"
+  }
+}
