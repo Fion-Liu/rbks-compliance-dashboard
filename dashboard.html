@@ -55,7 +55,7 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8faf
 <div class="top-bar">
 <span>🛡️ RBKS Compliance Team Dashboard</span>
 <div class="refresh-info">
-<span id="lastUpdate">Last updated 最後更新: 2026-06-08 00:41 | Auto-refresh 自動更新: ON</span>
+<span id="lastUpdate">Last updated 最後更新: 2026-06-08 08:52 | Auto-refresh 自動更新: ON</span>
 <button class="refresh-btn" onclick="location.reload()">🔄 Refresh 重新整理</button>
 </div>
 </div>
@@ -83,6 +83,9 @@ body{font-family:'Segoe UI',system-ui,-apple-system,sans-serif;background:#f8faf
 <button onclick="filterProjects('mp',event)">✅ MP</button>
 <button onclick="filterProjects('prep',event)">📋 Prep</button>
 <button onclick="filterProjects('scoping',event)">🔮 Scoping</button>
+<select id="projectSelect" onchange="jumpToProject(this.value)" style="margin-left:12px;padding:6px 12px;border:1px solid #e2e8f0;border-radius:20px;font-size:0.8rem;color:#475569;background:#fff;cursor:pointer;min-width:180px">
+<option value="">🔍 快速選擇案件 Select Project...</option>
+</select>
 </div>
 <div id="monthRangePanel" style="background:#fff;border-radius:10px;padding:20px;margin:20px 0;border:1px solid #e2e8f0;box-shadow:0 1px 3px rgba(0,0,0,0.04)">
 <h3 style="color:#2563eb;margin-bottom:12px;font-size:1rem">📆 月份區間分析 Month Range Analysis</h3>
@@ -508,7 +511,32 @@ function filterProjects(type,e){
       (type==='scoping'&&phase==='Scoping');
     row.style.display=show?'':'none';
   });
+  document.getElementById('projectSelect').value='';
 }
+function jumpToProject(name){
+  if(!name)return;
+  // Show all rows first
+  document.querySelectorAll('#tab1 .filters button').forEach(b=>b.classList.remove('active'));
+  document.querySelectorAll('#tab1 .filters button').forEach((b,i)=>{if(i===0)b.classList.add('active');});
+  document.querySelectorAll('#tab1 tr[data-status]').forEach(row=>row.style.display='');
+  // Find and highlight the project row
+  const rows=document.querySelectorAll('#tab1 tr[data-status]');
+  rows.forEach(row=>{
+    const td=row.querySelector('td strong');
+    if(td&&td.textContent===name){
+      row.style.background='#eff6ff';
+      row.scrollIntoView({behavior:'smooth',block:'center'});
+      setTimeout(()=>{row.style.background='';},3000);
+    }
+  });
+}
+// Populate project dropdown
+(function(){
+  const sel=document.getElementById('projectSelect');
+  const names=[];
+  document.querySelectorAll('#tab1 tr[data-status] td strong').forEach(el=>names.push(el.textContent));
+  names.sort().forEach(n=>{const o=document.createElement('option');o.value=n;o.textContent=n;sel.appendChild(o);});
+})();
 
 /* ===== Tab 1: Month Range Analysis ===== */
 const TAB1_SCHEDULES={"Cinco":{"evt":"12/05–12/22/25","dvt":"12/05–12/22/25"},"Flan":{"evt":"11/30/25–01/22/26","dvt":"02/05–03/06/26"},"Freesia":{"evt":"12/24/25–01/15/26","dvt":"02/04–03/06/26"},"Lionfish":{"evt":"12/09/25–02/13/26","dvt":"03/02–03/30/26"},"Chromis":{"evt":"12/09/25–02/11/26","dvt":"03/02–03/30/26"},"Osprey":{"evt":"12/03/25–02/11/26","dvt":"02/26–04/02/26"},"Orchid":{"evt":"10/20/25–01/22/26","dvt":"03/06–04/02/26"},"Scorpius":{"dvt":"01/19–02/26/26"},"Moonlight_r24":{"dvt":"01/05–01/09/26"},"Valkyrie":{"evt":"06/23–07/24/26"},"Sombrus":{"dvt":"02/02–03/20/26"},"Phantom_r24":{"dvt":"01/05–01/09/26"},"Prismal":{"dvt":"12/22/25–01/30/26"},"Huron":{"evt":"12/23–12/24/25"},"Newport":{"evt":"03/01–05/30/26","dvt":"05/06–05/13/26"},"PoE++":{"evt":"12/08/25–01/06/26"},"Mela":{"evt":"07/01–07/30/26"},"Coralfish":{"dvt":"05/01–05/15/26"},"White Rock":{"evt":"04/07–05/12/26","dvt":"05/19–05/25/26"},"Jewelfish":{"dvt":"05/01–05/30/26"},"Mount Wilson":{"evt":"02/03–04/14/26","dvt":"04/14–05/11/26"},"Vireo":{"dvt":"05/01–05/30/26"},"Blenny":{"evt":"03/27–06/30/26","dvt":"07/21–08/24/26"},"Cristo":{"evt":"04/28–05/30/26"},"Pencilfish":{"evt":"06/01–07/30/26"},"Dunlin":{"evt":"04/07–06/09/26"},"Snapper":{"evt":"06/01–06/30/26","dvt":"09/01–09/15/26"},"Opaleye":{"evt":"06/01–06/30/26","dvt":"09/01–09/15/26"},"Moray":{"evt":"06/01–06/30/26","dvt":"09/01–09/15/26"},"Tanami":{"evt":"05/15–06/15/26","dvt":"08/14–09/14/26"},"Black Rock":{"evt":"05/26–07/01/26","dvt":"09/02–09/29/26"},"Banjar":{"evt":"07/01–07/30/26","dvt":"08/14–08/30/26"},"Forsythia":{"dvt":"01/29–02/25/26"},"Tabernas":{"evt":"05/01–06/30/26"},"Kharan":{"evt":"03/01–05/30/26"},"Hexa":{"evt":"01/15–03/15/26"}};
